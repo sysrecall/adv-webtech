@@ -1,45 +1,30 @@
-import { Transform } from "class-transformer";
-import { IsString, IsEmail, IsIn, IsNotEmpty, IsNumberString, Matches, MinLength, ValidateIf  } from "class-validator";
+import { IsString, Matches, IsDateString, IsUrl, IsOptional } from 'class-validator';
 
-
-export class CreateAdminDto {
+export class CreateArtistDto {
   @IsString()
   @Matches(/^[A-Za-z\s]+$/, {
-    message: 'Name should contain only alphabets',
+    message: 'Name must not contain numbers or special characters',
   })
-  fullName: string;
+  name: string;
 
-  @IsNotEmpty()
-  @IsEmail({}, { message: 'Invalid email format' })
-  @Matches(/@.*\.xyz$/, {
-    message: 'Email must contain @ and .xyz domain',
-  })
-  email: string;
-
-  @MinLength(4, {
-    message: 'Password must be at least 4 characters long',
+  @IsString()
+  @Matches(/^(?=.*[@#$&]).+$/, {
+    message: 'Password must contain at least one special character (@, #, $, &)',
   })
   password: string;
 
-  @IsNumberString({}, { message: 'Phone number must contain only numbers' })
-  phone: string;
+  @IsDateString({}, { message: 'Date must be a valid ISO date string' })
+  birthDate: string;
 
-  @Transform(({ value }) => value.toLowerCase())
-  @IsIn(['male', 'female'], {
-    message: 'Gender must be either male or female',
-  })
-  gender: string;
+  @IsOptional()
+  @IsUrl({}, { message: 'Facebook link must be a valid URL' })
+  facebookLink?: string;
 
-  @IsNotEmpty({ message: 'NID number is required' })
-  @IsString({ message: 'NID must be a string' })
-  @Matches(/^\d{10,17}$/, { 
-    message: 'NID number must be in valid format (10-17 digits)' 
-  })
-  @Transform(({ value }) => value?.trim())
-  nid: string;
+  @IsOptional()
+  @IsUrl({}, { message: 'Twitter link must be a valid URL' })
+  twitterLink?: string;
 
-  
-  @ValidateIf((object) => object.nidImage !== undefined)
-  @Transform(({ value }) => value) 
-  nidImage: Express.Multer.File;
+  @IsOptional()
+  @IsUrl({}, { message: 'Instagram link must be a valid URL' })
+  instagramLink?: string;
 }
