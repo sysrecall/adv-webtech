@@ -41,7 +41,7 @@ export class ArtistService {
 
   for (const key in updateDto) {
     if (updateDto[key] === null || updateDto[key] === '') {
-      updatedArtist[key] = undefined; // or null, depending on preference
+      updatedArtist[key] = undefined;
     } else {
       updatedArtist[key] = updateDto[key];
     }
