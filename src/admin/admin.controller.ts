@@ -3,7 +3,7 @@ import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage, MulterError } from 'multer';
+import { diskStorage, memoryStorage, MulterError } from 'multer';
 
 @Controller('admin')
 export class AdminController {
@@ -21,19 +21,20 @@ export class AdminController {
     limits: {
       fileSize: 2 * 1024 * 1024,
     },
-    storage: diskStorage({
-      destination: './uploads/admin/nid',
-      filename: function (req, file, cb) {
-        cb(null, Date.now() + file.originalname)
-      }
-    }) 
+    // storage: diskStorage({
+    //   destination: './uploads/admin/nid',
+    //   filename: function (req, file, cb) {
+    //     cb(null, Date.now() + file.originalname)
+    //   }
+    // }) 
+    storage: memoryStorage()
   }))
   @UsePipes(new ValidationPipe({ transform: true }))
   create(@Body() createAdminDto: CreateAdminDto, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('NID image is required and must be under 2MB');
     }
-    createAdminDto.nidImage = file;
+    (createAdminDto as any).nidImage = file;
     console.log(file.path)
 
     return this.adminService.create(createAdminDto);
@@ -49,11 +50,27 @@ export class AdminController {
     return this.adminService.findOne(+id);
   }
 
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body('status') status: 'active' | 'inactive') {
+    return this.adminService.updateStatus(+id, status);
+
+  }
+
+  
+  @Get('status/inactive')
+  findInactive() {
+    return this.adminService.findByStatus('inactive');
+  }
+
+  @Get('age/older-than-40')
+  findOlderThan40() {
+    return this.adminService.findOlderThan40();
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return this.adminService.update(+id, updateAdminDto);
   }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.adminService.remove(+id);

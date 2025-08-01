@@ -1,13 +1,31 @@
 import { Transform } from "class-transformer";
-import { IsString, IsEmail, IsIn, IsNotEmpty, IsNumberString, Matches, MinLength, ValidateIf  } from "class-validator";
+import { IsString, IsEmail, IsIn, IsNotEmpty, IsNumberString, Matches, MinLength, ValidateIf, IsInt, MaxLength, Min, IsOptional  } from "class-validator";
 
 
 export class CreateAdminDto {
+  @IsInt()
+  @Transform(({ value }) => parseInt(value, 10))
+  @Min(0)
+  id: number;
+
   @IsString()
   @Matches(/^[A-Za-z\s]+$/, {
     message: 'Name should contain only alphabets',
   })
+  @MaxLength(100)
   fullName: string;
+
+  @IsInt()
+  @Min(0)
+  @Transform(({ value }) => parseInt(value, 10))
+  age: number
+
+  @IsOptional()
+  @IsIn(['active', 'inactive'])
+  status?: string; // Keep optional, but validation will pass if omitted
+  
+  @IsString()
+  username: string;
 
   @IsNotEmpty()
   @IsEmail({}, { message: 'Invalid email format' })

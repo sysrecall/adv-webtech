@@ -1,11 +1,35 @@
+import { Exclude } from "class-transformer";
+import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn } from "typeorm";
+
+@Entity('admins')
 export class Admin {
-    id: string;
+    @PrimaryColumn({type: 'int', unsigned: true})
+    id: number;
+
+    @Column({ type: 'varchar', length: 255 })
     fullName: string;
+
+    @Column({ type: 'int', unsigned: true })
+    age: number;
+
+    @Column({ type: 'varchar', default: 'active', enum: ['active', 'inactive'] })
+    status: string;
+
+    @Column()
     username: string;
+    @Column()
     password: string;
+    @Column()
     email: string;
+    @Column()
     phone: string;
+    @Column()
     gender: string;
+    @Column()
     nid: string;
-    nidImage: Express.Multer.File;
+    
+    @Column({ type: 'bytea', nullable: true })
+    @Exclude() // Exclude nidImage from serialization by default
+    nidImage: Buffer; //
+
 }
