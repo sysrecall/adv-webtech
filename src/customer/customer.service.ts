@@ -1,26 +1,58 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Customer } from './entities/customer.entity';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class CustomerService {
-  create(createCustomerDto: CreateCustomerDto) {
-    return 'This action adds a new customer';
+  constructor(@InjectRepository(Customer) private customerRepositroy: Repository<Customer>) {}
+
+  async create(createCustomerDto: CreateCustomerDto, profilePhotoPath: string | null) {
+    let customer = this.customerRepositroy.create({
+      ...createCustomerDto,
+      profilePhotoPath: profilePhotoPath
+    });
+    return this.customerRepositroy.save(customer);
   }
 
-  findAll() {
-    return `This action returns all customer`;
+  async findAll() {
+    return this.customerRepositroy.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} customer`;
+  async findOne(id: string) {
+    return this.customerRepositroy.findOneBy({ id: id });
   }
 
-  update(id: number, updateCustomerDto: UpdateCustomerDto) {
-    return `This action updates a #${id} customer`;
+  async filterByName(name: string) {
+    let customers = this.customerRepositroy.findBy({
+      fullName: ILike(`%${name}%`),
+    })
+    return customers;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} customer`;
+  async findOneByUsername(username: string) {
+    let customer = this.customerRepositroy.findOneBy({ username: username });
+    return customer;
   }
+
+  async removeOneByUsername(username: string) {
+    let customer = await this.customerRepositroy.findOneBy({ username: username });
+    
+    if (customer)
+      this.customerRepositroy.remove(customer);
+
+    return customer;
+  }
+
+  async update(id: string, updateCustomerDto: UpdateCustomerDto) {
+    await this.customerRepositroy.update(id, updateCustomerDto);
+    return this.customerRepositroy.findBy({id: id});
+  }
+
+  async remove(id: string) {
+    await this.customerRepositroy.delete(id);
+  }
+
 }

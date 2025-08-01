@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -29,33 +29,49 @@ export class CustomerController {
     }) 
   }))
   @UsePipes(new ValidationPipe())
-  create(@Body() createCustomerDto: CreateCustomerDto, @UploadedFile() photo: Express.Multer.File) {
-    console.log(photo.path)
-    return this.customerService.create(createCustomerDto);
+  async create(@Body() createCustomerDto: CreateCustomerDto, @UploadedFile() photo: Express.Multer.File) {
+    const profilePhotoPath = photo ? photo.filename : null;
+    return await this.customerService.create(createCustomerDto, profilePhotoPath);
   }
 
-  @Get()
-  findAll() {
-    return this.customerService.findAll();
+  @Get('all')
+  async findAll() {
+    return await this.customerService.findAll();
   }
 
   @Get('photo/:name')
-  getProfilePhoto(@Param('name') name: string, @Res() res) {
+  async getProfilePhoto(@Param('name') name: string, @Res() res) {
     res.sendFile(name, { root: './uploads/customer/profile-photos'})        
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.customerService.findOne(+id);
+  @Get('id/:id')
+  async findOne(@Param('id') id: string) {
+    return await this.customerService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto) {
-    return this.customerService.update(+id, updateCustomerDto);
+  @Get('find')
+  async filterByName(@Query('fullName') fullName: string) {
+    return await this.customerService.filterByName(fullName);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.customerService.remove(+id);
+  @Get('username/:username')
+  async username(@Param('username') username: string) {
+    return await this.customerService.findOneByUsername(username);
+  }
+
+  @Delete('username/:username')
+  async removeOneByUsername(@Param('username') username: string) {
+    return await this.customerService.removeOneByUsername(username);
+  }
+
+
+  @Patch('id/:id')
+  async update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto) {
+    return await this.customerService.update(id, updateCustomerDto);
+  }
+
+  @Delete('id/:id')
+  async remove(@Param('id') id: string) {
+    return await this.customerService.remove(id);
   }
 }
