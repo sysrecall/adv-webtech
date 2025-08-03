@@ -1,65 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateArtistDto } from './dto/create-artist.dto';
-import { UpdateArtistDto } from './dto/update-artist.dto';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Artist } from './entities/artist.entity';
+import { CreateArtistDto } from './dto/create-artist.dto';
+import { UpdateArtistCountryDto } from './dto/update-artist-country.dto';
 
 @Injectable()
 export class ArtistService {
-  private artists: Artist[] = [];
+  constructor(
+    @InjectRepository(Artist)
+    private readonly artistRepo: Repository<Artist>,
+  ) {}
 
-  create(createArtistDto: CreateArtistDto): Artist {
-    const newArtist: Artist = {
-      id: this.artists.length + 1,
-      ...createArtistDto,
-    };
-    this.artists.push(newArtist);
-    return newArtist;
+  async create(dto: CreateArtistDto): Promise<Artist> {
+    const artist = this.artistRepo.create(dto);
+    return this.artistRepo.save(artist);
   }
 
-  findAll(): Artist[] {
-    return this.artists;
-  }
-
-  findByName(name: string): Artist[] {
-    return this.artists.filter((artist) =>
-      artist.name.toLowerCase().includes(name.toLowerCase()),
-    );
-  }
-
-  findOne(id: number): Artist {
-    const artist = this.artists.find((a) => a.id === id);
-    if (!artist) {
-      throw new NotFoundException(`Artist with ID ${id} not found`);
-    }
-    return artist;
-  }
-
- update(id: number, updateDto: UpdateArtistDto): Artist {
-  const artist = this.findOne(id);
-  
-  const updatedArtist = { ...artist };
-
-  for (const key in updateDto) {
-    if (updateDto[key] === null || updateDto[key] === '') {
-      updatedArtist[key] = undefined;
-    } else {
-      updatedArtist[key] = updateDto[key];
-    }
-  }
-
-  const index = this.artists.findIndex((a) => a.id === id);
-  this.artists[index] = updatedArtist;
-
-  return updatedArtist;
+ async updateCountry(id: number, dto: UpdateArtistCountryDto): Promise<Artist | null> {
+  await this.artistRepo.update(id, { country: dto.country });
+  return this.artistRepo.findOneBy({ id });
 }
 
 
+  async findByJoiningDate(date: string): Promise<Artist[]> {
+    return this.artistRepo
+      .createQueryBuilder('artist')
+      .where('DATE(artist.joiningDate) = :date', { date })
+      .getMany();
+  }
 
-  remove(id: number): void {
-    const index = this.artists.findIndex((a) => a.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Artist with ID ${id} not found`);
-    }
-    this.artists.splice(index, 1);
+  async findByUnknownCountry(): Promise<Artist[]> {
+    return this.artistRepo.find({ where: { country: 'Unknown' } });
   }
 }
