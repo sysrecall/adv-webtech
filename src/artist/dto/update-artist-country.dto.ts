@@ -1,10 +1,7 @@
-import { IsOptional, IsString, Length } from 'class-validator';
+import { IsString, Length } from 'class-validator';
 
-export class CreateArtistDto {
-  @IsOptional()
+export class UpdateArtistCountryDto {
   @IsString()
   @Length(1, 30)
-  country?: string;
+  country: string;
 }
-
-
