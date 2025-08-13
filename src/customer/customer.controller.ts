@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query, UseGuards, Req, Inject, forwardRef, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query, UseGuards, Req, Inject, forwardRef, NotFoundException, Response, HttpCode, HttpStatus } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -8,6 +8,8 @@ import { SignInCustomerDto } from './dto/signin-customer.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from '@nestjs/common';
+import { Role } from 'src/enums/role.enum';
+import { RequiredRole } from 'src/auth/role.decorator';
 
 @Controller('customer')
 export class CustomerController {
@@ -41,9 +43,17 @@ export class CustomerController {
     return await this.customerService.create(createCustomerDto, profilePhotoPath);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('signin')
-  async signIn(@Body() signInCustomerDto: SignInCustomerDto) {
-    return await this.authService.signIn(signInCustomerDto.username, signInCustomerDto.password, 'customer');
+  async signIn(@Body() signInCustomerDto: SignInCustomerDto, @Res({passthrough: true}) res) {
+    const { access_token } = await this.authService.signIn(signInCustomerDto.username, signInCustomerDto.password, 'customer');
+      res.cookie('Authorization', `Bearer ${access_token}`, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
+    });
+    res.send();
   }
 
 
@@ -55,6 +65,12 @@ export class CustomerController {
     const { passwordHash, ...userWithoutPassHash } = user;
 
     return userWithoutPassHash;
+  }
+
+  @RequiredRole(Role.Customer)
+  @Get('testRoute')
+  async testRoute() {
+    return true;
   }
 
   @Get('all')

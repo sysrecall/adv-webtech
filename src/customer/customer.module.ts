@@ -5,11 +5,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Customer } from './entities/customer.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { RolesGuard } from 'src/auth/role.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [forwardRef(() => AuthModule), TypeOrmModule.forFeature([Customer]), JwtModule],
   controllers: [CustomerController],
-  providers: [CustomerService],
+  providers: [CustomerService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
   exports: [CustomerService]
 })
 export class CustomerModule {}
