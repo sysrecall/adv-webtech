@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Artist } from './entities/artist.entity';
 import { CreateArtistDto } from './dto/create-artist.dto';
-import { UpdateArtistDto } from './dto/update-artist.dto';
+import { UpdateArtistCountryDto } from './dto/update-artist-country.dto';
 
 @Injectable()
 export class ArtistService {
-  create(createArtistDto: CreateArtistDto) {
-    return 'This action adds a new artist';
+  constructor(
+    @InjectRepository(Artist)
+    private readonly artistRepo: Repository<Artist>,
+  ) {}
+
+  async create(dto: CreateArtistDto): Promise<Artist> {
+    const artist = this.artistRepo.create(dto);
+    return this.artistRepo.save(artist);
   }
 
-  findAll() {
-    return `This action returns all artist`;
+ async updateCountry(id: number, dto: UpdateArtistCountryDto): Promise<Artist | null> {
+  await this.artistRepo.update(id, { country: dto.country });
+  return this.artistRepo.findOneBy({ id });
+}
+
+
+  async findByJoiningDate(date: string): Promise<Artist[]> {
+    return this.artistRepo
+      .createQueryBuilder('artist')
+      .where('DATE(artist.joiningDate) = :date', { date })
+      .getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} artist`;
-  }
-
-  update(id: number, updateArtistDto: UpdateArtistDto) {
-    return `This action updates a #${id} artist`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} artist`;
+  async findByUnknownCountry(): Promise<Artist[]> {
+    return this.artistRepo.find({ where: { country: 'Unknown' } });
   }
 }

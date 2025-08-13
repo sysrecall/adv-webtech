@@ -1,6 +1,6 @@
 import { Exclude } from "class-transformer";
-import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn } from "typeorm";
-
+import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn, OneToMany } from "typeorm";
+import { Customer } from "src/customer/entities/customer.entity";
 @Entity('admins')
 export class Admin {
     @PrimaryColumn({type: 'int', unsigned: true})
@@ -31,5 +31,8 @@ export class Admin {
     @Column({ type: 'bytea', nullable: true })
     @Exclude() // Exclude nidImage from serialization by default
     nidImage: Buffer; //
+
+    @OneToMany(() => Customer, customer=> customer.admin)
+    customers: Customer[];
 
 }

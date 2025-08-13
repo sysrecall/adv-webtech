@@ -4,11 +4,13 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage, MulterError } from 'multer';
+import { Customer } from 'src/customer/entities/customer.entity';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
-
+  
+//? Admin registration endpoint with file upload
   @Post('register')
   @UseInterceptors(FileInterceptor('nidImage', {
     fileFilter: (req, file, cb) => {
@@ -39,16 +41,19 @@ export class AdminController {
 
     return this.adminService.create(createAdminDto);
   }
+//? Get Admin list 
 
   @Get()
   findAll() {
     return this.adminService.findAll();
   }
+//? Get Admin by ID
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.adminService.findOne(+id);
   }
+//? update Admin by status
 
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: 'active' | 'inactive') {
@@ -56,16 +61,17 @@ export class AdminController {
 
   }
 
-  
+//? Get Admin by status
+
   @Get('status/inactive')
   findInactive() {
     return this.adminService.findByStatus('inactive');
   }
 
-  @Get('age/older-than-40')
-  findOlderThan40() {
-    return this.adminService.findOlderThan40();
-  }
+  // @Get('age/older-than-40')
+  // findOlderThan40() {
+  //   return this.adminService.findOlderThan40();
+  // }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
@@ -75,4 +81,50 @@ export class AdminController {
   remove(@Param('id') id: string) {
     return this.adminService.remove(+id);
   }
+
+
+    //? Routes for Admin-Customer relationship (OneToMany)
+
+  // @Post(':id/add-customer/:customerId')
+  // // @UseGuards(JwtAuthGuard)
+  // addCustomer(@Param('id') id: string, @Param('customerId') customerId: string) {
+  //   return this.adminService.addCustomer(+id, +customerId);
+  // }
+
+  // @Delete(':id/remove-customer/:customerId')
+  // // @UseGuards(JwtAuthGuard)
+  // removeCustomer(@Param('id') id: string, @Param('customerId') customerId: string) {
+  //   return this.adminService.removeCustomer(+id, +customerId);
+  // }
+
+  // @Get(':id/customers')
+  // // @UseGuards(JwtAuthGuard)
+  // getCustomers(@Param('id') id: string) {
+  //   return this.adminService.getCustomers(+id);
+  // }
+  @Post(':id/customers')
+createCustomer(
+  @Param('id') id: string,
+  @Body() customerData: Partial<Customer>,  // Create a DTO if needed
+) {
+  return this.adminService.createCustomer(+id, customerData);
+}
+
+@Patch(':id/customers/:customerId')
+updateCustomer(
+  @Param('id') id: string,
+  @Param('customerId') customerId: string,
+  @Body() updateData: Partial<Customer>,
+) {
+  return this.adminService.updateCustomer(+id, customerId, updateData);
+}
+
+@Delete(':id/customers/:customerId')
+removeCustomerById(
+  @Param('id') id: string,
+  @Param('customerId') customerId: string,
+) {
+  return this.adminService.removeCustomerById(+id, customerId);
+}
+
 }
