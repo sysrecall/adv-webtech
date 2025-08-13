@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryColumn, BeforeInsert } from "typeorm";
+import { Entity, Column, PrimaryColumn, BeforeInsert, ManyToOne } from "typeorm";
 import { v4 } from "uuid";
+import { Admin } from "../../admin/entities/admin.entity";
 
 @Entity("customer")
 export class Customer {
@@ -45,4 +46,7 @@ export class Customer {
         this.id = v4();
         console.log(this.id);
     }
+    
+  @ManyToOne(() => Admin, admin => admin.customers)
+  admin: Admin;
 }
