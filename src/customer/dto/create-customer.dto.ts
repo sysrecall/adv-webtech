@@ -1,7 +1,8 @@
 import { Transform } from "class-transformer";
-import { IsEmail, IsIn, IsNotEmpty, IsNumberString, Matches, MinLength  } from "class-validator";
+import { IsEmail, IsIn, IsNotEmpty, IsNumberString, IsString, Matches, MinLength  } from "class-validator";
 
 export class CreateCustomerDto {
+    @IsString()
     username: string;
     @MinLength(6)
     @Matches(/\S*[A-Z]\S*/g, {
@@ -10,12 +11,12 @@ export class CreateCustomerDto {
     password: string;
     @IsNotEmpty()
     @IsEmail()
-    @Matches(/\S+aiub.edu$/, {
-        message: 'email must have aiub.edu domain'
-    })
     email: string;
+    @IsString()
     fullName: string;
+    @IsString()
     billingAddress: string;
+    @IsString()
     shippingAddress: string;
     @IsNumberString()
     phone: string;

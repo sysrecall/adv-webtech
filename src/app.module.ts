@@ -6,23 +6,25 @@ import { ArtistModule } from './artist/artist.module';
 import { CustomerModule } from './customer/customer.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [AdminModule, ArtistModule, CustomerModule,
+  imports: [AuthModule, AdminModule, ArtistModule, CustomerModule,
     ConfigModule.forRoot({
       envFilePath: '.env.local',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: process.env.DB_PASS,
-    database: 'art_store',
-    autoLoadEntities: true,
-    synchronize: true
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: process.env.DB_PASS,
+      database: 'art_store',
+      autoLoadEntities: true,
+      synchronize: true
   }),
+    AuthModule,
 ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,9 +1,8 @@
-import { Entity, Column, PrimaryColumn, BeforeInsert } from "typeorm";
-import { v4 } from "uuid";
+import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("customer")
 export class Customer {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn('uuid')
     id: string;
     @Column({
         type: 'varchar',
@@ -12,7 +11,7 @@ export class Customer {
     })
     username: string;
     @Column()
-    password: string;
+    passwordHash: string;
     @Column()
     email: string;
     @Column({
@@ -20,29 +19,30 @@ export class Customer {
         length: 150,
     })
     fullName: string;
-    @Column()
-    billingAddress: string;
-    @Column()
-    shippingAddress: string;
-    @Column()
-    phone: string;
-    @Column()
-    gender: string;
     @Column({
-        type: 'varchar',
         nullable: true,
     })
+    billingAddress: string;
+    @Column({
+        nullable: true,
+    })
+    shippingAddress: string;
+    @Column({
+        nullable: true,
+    })
+    phone: string;
+    @Column({
+        nullable: true,
+    })
+    gender: string;
     @Column({
         type: 'bool',
         default: false,
     })
     isActive: boolean;
+    @Column({
+        type: 'varchar',
+        nullable: true,
+    })
     profilePhotoPath: string | null;
-
-
-    @BeforeInsert()
-    generateId() {
-        this.id = v4();
-        console.log(this.id);
-    }
 }
