@@ -9,11 +9,12 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [AuthModule, AdminModule, ArtistModule, CustomerModule,
+  imports: [
     ConfigModule.forRoot({
       envFilePath: '.env.local',
       isGlobal: true,
     }),
+    AuthModule, AdminModule, ArtistModule, CustomerModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',

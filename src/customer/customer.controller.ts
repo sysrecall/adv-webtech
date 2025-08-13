@@ -1,13 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query, UseGuards, Req, Inject, forwardRef, NotFoundException } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, MulterError } from 'multer';
+import { SignInCustomerDto } from './dto/signin-customer.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { Request } from '@nestjs/common';
 
 @Controller('customer')
 export class CustomerController {
-  constructor(private readonly customerService: CustomerService) {}
+  constructor(
+    private readonly customerService: CustomerService,
+    private readonly authService: AuthService
+  ) {}
 
   @Post()
   @UseInterceptors(FileInterceptor('photo', {
@@ -32,6 +39,22 @@ export class CustomerController {
   async create(@Body() createCustomerDto: CreateCustomerDto, @UploadedFile() photo: Express.Multer.File) {
     const profilePhotoPath = photo ? photo.filename : null;
     return await this.customerService.create(createCustomerDto, profilePhotoPath);
+  }
+
+  @Post('signin')
+  async signIn(@Body() signInCustomerDto: SignInCustomerDto) {
+    return await this.authService.signIn(signInCustomerDto.username, signInCustomerDto.password, 'customer');
+  }
+
+
+  @UseGuards(AuthGuard)
+  @Get('profile')
+  async profile(@Request() request) {
+    const user = await this.customerService.findOne(request.user.id);
+    if (!user) { throw new NotFoundException('No user found!'); }
+    const { passwordHash, ...userWithoutPassHash } = user;
+
+    return userWithoutPassHash;
   }
 
   @Get('all')
