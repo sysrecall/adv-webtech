@@ -4,7 +4,7 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage, MulterError } from 'multer';
-import { Customer } from 'src/customer/entities/customer.entity';
+import { Customer } from 'src/modules/customer/entities/customer.entity';
 
 @Controller('admin')
 export class AdminController {

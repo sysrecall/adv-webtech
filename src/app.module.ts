@@ -3,10 +3,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
 import { ArtistModule } from './artist/artist.module';
-import { CustomerModule } from './customer/customer.module';
+import { CustomerModule } from './modules/customer/customer.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ArtModule } from './modules/art/art.module';
+import { CartModule } from './modules/cart/cart.module';
+import { OrderItemModule } from './modules/order-item/order-item.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -14,7 +18,6 @@ import { AuthModule } from './auth/auth.module';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
-    AuthModule, AdminModule, ArtistModule, CustomerModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -25,6 +28,8 @@ import { AuthModule } from './auth/auth.module';
       autoLoadEntities: true,
       synchronize: true
   }),
+    AuthModule, AdminModule, ArtistModule, CustomerModule,
+    ArtModule, CartModule, OrderItemModule, OrderModule,
 ],
   controllers: [AppController],
   providers: [AppService],

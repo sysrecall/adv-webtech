@@ -5,11 +5,11 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, MulterError } from 'multer';
 import { SignInCustomerDto } from './dto/signin-customer.dto';
-import { AuthService } from 'src/auth/auth.service';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthService } from 'src/modules/auth/auth.service';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Request } from '@nestjs/common';
-import { Role } from 'src/enums/role.enum';
-import { RequiredRole } from 'src/auth/role.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { RequiredRole } from 'src/common/decorators/role.decorator';
 
 @Controller('customer')
 export class CustomerController {

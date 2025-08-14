@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
-import { Admin } from "../../admin/entities/admin.entity";
+import { Admin } from "src/admin/entities/admin.entity";
 
 @Entity("customer")
 export class Customer {
@@ -46,6 +46,8 @@ export class Customer {
         nullable: true,
     })
     profilePhotoPath: string | null;
+
+    
     
   @ManyToOne(() => Admin, admin => admin.customers)
   admin: Admin;

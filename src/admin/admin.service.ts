@@ -4,7 +4,7 @@ import { FindOptionsSelect, MoreThan, Repository } from 'typeorm';
 import { Admin } from './entities/admin.entity';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
-import { Customer } from 'src/customer/entities/customer.entity';
+import { Customer } from 'src/modules/customer/entities/customer.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

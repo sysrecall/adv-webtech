@@ -3,9 +3,9 @@ import { CustomerService } from './customer.service';
 import { CustomerController } from './customer.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Customer } from './entities/customer.entity';
-import { AuthModule } from 'src/auth/auth.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { RolesGuard } from 'src/auth/role.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({

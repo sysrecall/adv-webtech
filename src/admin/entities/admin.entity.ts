@@ -1,6 +1,6 @@
 import { Exclude } from "class-transformer";
 import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn, OneToMany } from "typeorm";
-import { Customer } from "src/customer/entities/customer.entity";
+import { Customer } from "src/modules/customer/entities/customer.entity";
 @Entity('admins')
 export class Admin {
     @PrimaryColumn({type: 'int', unsigned: true})

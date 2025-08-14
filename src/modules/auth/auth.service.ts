@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { CustomerService } from 'src/customer/customer.service';
+import { CustomerService } from 'src/modules/customer/customer.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
 
