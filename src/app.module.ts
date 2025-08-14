@@ -11,6 +11,7 @@ import { ArtModule } from './modules/art/art.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderItemModule } from './modules/order-item/order-item.module';
 import { OrderModule } from './modules/order/order.module';
+import { CartItemModule } from './modules/cart-item/cart-item.module';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { OrderModule } from './modules/order/order.module';
       synchronize: true
   }),
     AuthModule, AdminModule, ArtistModule, CustomerModule,
-    ArtModule, CartModule, OrderItemModule, OrderModule,
+    ArtModule, CartModule, OrderItemModule, OrderModule, CartItemModule,
 ],
   controllers: [AppController],
   providers: [AppService],

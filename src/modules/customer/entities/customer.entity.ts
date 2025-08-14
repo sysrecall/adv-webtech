@@ -1,5 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToOne, OneToMany } from "typeorm";
 import { Admin } from "src/admin/entities/admin.entity";
+import { Order } from "src/modules/order/entities/order.entity";
+import { Cart } from "src/modules/cart/entities/cart.entity";
 
 @Entity("customer")
 export class Customer {
@@ -47,8 +49,12 @@ export class Customer {
     })
     profilePhotoPath: string | null;
 
+    @OneToOne(() => Cart, cart => cart.customer, { cascade: true })
+    cart: Cart;
+
+    @OneToMany(() => Order, order => order.customer)
+    orders: Order[]
     
-    
-  @ManyToOne(() => Admin, admin => admin.customers)
-  admin: Admin;
+    @ManyToOne(() => Admin, admin => admin.customers)
+    admin: Admin;
 }

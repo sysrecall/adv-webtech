@@ -1,13 +1,13 @@
 import { Artist } from "src/artist/entities/artist.entity"
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('art')
 export class Art {
-    @PrimaryGeneratedColumn('uuid');
+    @PrimaryGeneratedColumn('uuid')
     id: string;
     @Column()
     title: string;
-    @Column()
+    @ManyToOne(() => Artist)
     artist: Artist;
     @Column()
     url: string;
