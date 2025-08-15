@@ -1,6 +1,7 @@
 import { Exclude } from "class-transformer";
 import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn, OneToMany } from "typeorm";
 import { Customer } from "src/modules/customer/entities/customer.entity";
+import { Art } from "src/modules/art/entities/art.entity";
 @Entity('admins')
 export class Admin {
     @PrimaryGeneratedColumn()
@@ -34,5 +35,8 @@ export class Admin {
 
     @OneToMany(() => Customer, customer=> customer.admin)
     customers: Customer[];
+
+    @OneToMany(() => Art, art => art.admin)
+    art: Art[];
 
 }
