@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn, OneToMany } from
 import { Customer } from "src/modules/customer/entities/customer.entity";
 @Entity('admins')
 export class Admin {
-    @PrimaryColumn({type: 'int', unsigned: true})
+    @PrimaryGeneratedColumn()
     id: number;
 
     @Column({ type: 'varchar', length: 255 })

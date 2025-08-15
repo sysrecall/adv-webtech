@@ -1,14 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage, MulterError } from 'multer';
 import { Customer } from 'src/modules/customer/entities/customer.entity';
-
+import { AuthService } from '../modules/auth/auth.service';
+import { Request } from '@nestjs/common';
+import { AdminSignInDto } from './dto/admin-signin.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { RequiredRole } from 'src/common/decorators/role.decorator';
+import { Role } from 'src/common/enums/role.enum';
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  // authService: any;
+  constructor(private readonly adminService: AdminService,
+    private readonly authService: AuthService
+  ) {}
   
 //? Admin registration endpoint with file upload
   @Post('register')
@@ -41,8 +50,30 @@ export class AdminController {
 
     return this.adminService.create(createAdminDto);
   }
-//? Get Admin list 
 
+  
+//? Admin SignIn endpoint 
+ @Post('signin')
+  async signIn(@Body() AdminSignInDto: AdminSignInDto) {
+    return await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
+  }
+
+  //? Adminn profile endpoint
+  
+@UseGuards(AuthGuard, RolesGuard) // Must be in this order
+@RequiredRole(Role.Admin) // This sets the required role
+@Get('profile')
+  async profile(@Request() request) {
+    const admin = await this.adminService.findOneWithPassword(request.user.id);
+    if (!admin) {
+      throw new NotFoundException('No admin found!');
+    }
+    const { password, ...rest } = admin;
+    return rest;
+  }
+
+
+//? Get Admin list 
   @Get()
   findAll() {
     return this.adminService.findAll();

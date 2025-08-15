@@ -2,20 +2,23 @@ import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/c
 import { CustomerService } from 'src/modules/customer/customer.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
-
+import { AdminService } from 'src/admin/admin.service';
+//{}
 @Injectable()
 export class AuthService {
+    // adminService: any;
     constructor(
         private readonly jwtService: JwtService, 
         private readonly customerService: CustomerService,
+        private readonly adminService: AdminService,
     ) {}
     
     async signIn(username: string, pass: string, role: 'customer' | 'admin' | 'artist'): Promise<{ access_token: string }> {
         let user;
         switch (role) {
-            // case 'admin':
-            //     user = await this.customerService.findOneByUsername(username);
-            //     break;
+            case 'admin':
+                user = await this.adminService.findOneByUsername(username);
+                break;
             // case 'artist':
             //     user = await this.artistService.findOneByUsername(username);
             //     break;
@@ -37,5 +40,6 @@ export class AuthService {
         });
 
         return { access_token: token }
+        
     }
 }

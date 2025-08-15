@@ -22,24 +22,21 @@ export class AdminService {
   //   return `This action returns all admin`;
 
   // }
+
 async create(createAdminDto: CreateAdminDto) {
   const { nidImage, password, ...rest } = createAdminDto;
 
-  // 🔹 Generate salt
   const salt = await bcrypt.genSalt(10);
 
-  // 🔹 Hash password with salt
-  const hashedPassword = await bcrypt.hash(password, salt);
+  const passwordHash = await bcrypt.hash(password, salt);
 
-  // 🔹 Create admin entity
   const admin = this.adminRepository.create({
     ...rest,
-    password: hashedPassword, // store hashed password
+    password: passwordHash, // store hashed password
     nidImage: nidImage.buffer, // only pass the buffer for image
     status: createAdminDto.status || 'active',
   });
 
-  // 🔹 Save to database
   return this.adminRepository.save(admin);
 }
 
@@ -73,6 +70,50 @@ findOne(id: number) {
     }
   });
 }
+//? For auth signin
+  // async findOneByUsername(username: string) {
+  //   let admin = this.adminRepository.findOneBy({ username: username });
+  //   return admin;
+  // }
+async findOneByUsername(username: string) {
+  const admin = await this.adminRepository.findOne({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      password: true, // Include password in the select
+      fullName: true,
+      email: true,
+      status: true,
+    },
+  });
+
+  if (!admin) return null;
+
+  // Rename 'password' to 'passwordHash' to match AuthService expectations
+  return {
+    ...admin,
+    passwordHash: admin.password, // Critical fix
+  };
+}
+//? For auth signin with password
+async findOneWithPassword(id: number) {
+  return this.adminRepository.findOne({
+    where: { id },
+    select: {
+      id: true,
+      fullName: true,
+      age: true,
+      status: true,
+      username: true,
+      email: true,
+      phone: true,
+      gender: true,
+      password: true 
+    }
+  });
+}
+
 
 
 async updateStatus(id: number, status: 'active' | 'inactive') {
