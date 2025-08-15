@@ -12,6 +12,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { OrderItemModule } from './modules/order-item/order-item.module';
 import { OrderModule } from './modules/order/order.module';
 import { CartItemModule } from './modules/cart-item/cart-item.module';
+import { MailerModule } from './modules/mailer/mailer.module';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { CartItemModule } from './modules/cart-item/cart-item.module';
       synchronize: true
   }),
     AuthModule, AdminModule, ArtistModule, CustomerModule,
-    ArtModule, CartModule, OrderItemModule, OrderModule, CartItemModule,
+    ArtModule, CartModule, OrderItemModule, OrderModule, CartItemModule, MailerModule,
 ],
   controllers: [AppController],
   providers: [AppService],

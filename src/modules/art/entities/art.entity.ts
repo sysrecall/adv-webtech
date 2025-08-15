@@ -1,6 +1,6 @@
 import { Artist } from "src/artist/entities/artist.entity"
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-
+import {  Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Admin } from "src/admin/entities/admin.entity";
 @Entity('art')
 export class Art {
     @PrimaryGeneratedColumn('uuid')
@@ -21,4 +21,7 @@ export class Art {
     style: string;
     @Column()
     desc: string;
+    // admin: any;
+    @ManyToOne(() => Admin, admin => admin.art)
+    admin: Admin;
 }

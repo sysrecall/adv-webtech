@@ -12,6 +12,7 @@ import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { RequiredRole } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+
 @Controller('admin')
 export class AdminController {
   // authService: any;
@@ -64,6 +65,7 @@ export class AdminController {
 @RequiredRole(Role.Admin) // This sets the required role
 @Get('profile')
   async profile(@Request() request) {
+    console.log(request.user);
     const admin = await this.adminService.findOneWithPassword(request.user.id);
     if (!admin) {
       throw new NotFoundException('No admin found!');
