@@ -1,6 +1,6 @@
 import { CartItem } from "src/modules/cart-item/entities/cart-item.entity";
 import { Customer } from "src/modules/customer/entities/customer.entity";
-import { Entity, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('cart')
 export class Cart {
@@ -8,12 +8,13 @@ export class Cart {
     id: string;
 
     @OneToOne(() => Customer, customer => customer.cart)
+    @JoinColumn()
     customer: Customer
 
-    @OneToMany(() => CartItem, cartItem => cartItem.cart, { cascade: true })
-    cartItems: CartItem[]
+    @OneToMany(() => CartItem, cartItem => cartItem.cart, { cascade: true, nullable: true})
+    cartItems?: CartItem[]
 
     getTotal() : number {
-        return this.cartItems.reduce((total, item) => total + (item.quantity * item.price), 0);
+        return this.cartItems?.reduce((total, item) => total + (item.quantity * item.price), 0) ?? 0;
     }
 }

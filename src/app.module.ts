@@ -24,7 +24,7 @@ import { CartItemModule } from './modules/cart-item/cart-item.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '123',
+      password: process.env.DB_PASS ?? '123',
       database: 'art_store',
       autoLoadEntities: true,
       synchronize: true

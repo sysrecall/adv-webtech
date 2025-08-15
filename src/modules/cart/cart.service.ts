@@ -1,26 +1,63 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, PreconditionFailedException } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Cart } from './entities/cart.entity';
+import { Repository } from 'typeorm';
+import { Customer } from '../customer/entities/customer.entity';
+import { Art } from '../art/entities/art.entity';
+import { CartItem } from '../cart-item/entities/cart-item.entity';
 
 @Injectable()
 export class CartService {
-  create(createCartDto: CreateCartDto) {
-    return 'This action adds a new cart';
+  constructor(
+    @InjectRepository(Cart) private readonly cartRepository: Repository<Cart>,
+    @InjectRepository(Customer) private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(CartItem) private readonly cartItemRepository: Repository<CartItem>
+  ) {}
+
+  async create(createCartDto: CreateCartDto) {
+    const customer = await this.customerRepository.findOneBy({ id: createCartDto.customerId });
+    if (!customer) throw new PreconditionFailedException("Invalid customer id");
+    
+    const incomingItems = this.cartItemRepository.create(
+      (createCartDto.cartItems ?? []).map(item => ({
+        ...item,
+        art: { id: item.artId },
+      }))
+    );
+
+    let cart = await this.cartRepository.findOne({
+      where: { customer: { id: customer.id } },
+      relations: ['cartItems', 'cartItems.art'],
+    });
+
+    if (cart) {
+      cart.cartItems = (cart.cartItems ?? []).concat(incomingItems);
+    } else {
+      cart = this.cartRepository.create({
+        customer,
+        cartItems: incomingItems,
+      });
+    }
+
+    return this.cartRepository.save(cart);
   }
 
-  findAll() {
-    return `This action returns all cart`;
+  async findAll() {
+    return this.cartRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cart`;
+  async findOne(id: string) {
+    return this.cartRepository.findOneBy({id: id});
   }
 
-  update(id: number, updateCartDto: UpdateCartDto) {
-    return `This action updates a #${id} cart`;
+  async update(id: string, updateCartDto: UpdateCartDto) {
+    await this.cartRepository.update(id, updateCartDto);
+    return this.cartRepository.findBy({id: id});
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cart`;
+  async remove(id: string) {
+    return this.cartRepository.delete(id);
   }
 }

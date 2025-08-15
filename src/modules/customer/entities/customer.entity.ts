@@ -1,10 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToOne, OneToMany } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToOne, OneToMany, JoinColumn } from "typeorm";
 import { Admin } from "src/admin/entities/admin.entity";
 import { Order } from "src/modules/order/entities/order.entity";
 import { Cart } from "src/modules/cart/entities/cart.entity";
 
 @Entity("customer")
-export class Customer {
+export class Customer implements User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
     @Column({
@@ -49,7 +49,8 @@ export class Customer {
     })
     profilePhotoPath: string | null;
 
-    @OneToOne(() => Cart, cart => cart.customer, { cascade: true })
+    @OneToOne(() => Cart, cart => cart.customer, { onDelete: 'CASCADE' })
+    @JoinColumn()
     cart: Cart;
 
     @OneToMany(() => Order, order => order.customer)

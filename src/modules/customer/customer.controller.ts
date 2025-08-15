@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query, UseGuards, Req, Inject, forwardRef, NotFoundException, Response, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Res, Query, UseGuards, Req, Inject, forwardRef, NotFoundException, Response, HttpCode, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -47,7 +47,8 @@ export class CustomerController {
   @Post('signin')
   async signIn(@Body() signInCustomerDto: SignInCustomerDto, @Res({passthrough: true}) res) {
     const { access_token } = await this.authService.signIn(signInCustomerDto.username, signInCustomerDto.password, 'customer');
-      res.cookie('Authorization', `Bearer ${access_token}`, {
+    
+    res.cookie('Authorization', `Bearer ${access_token}`, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
@@ -61,7 +62,7 @@ export class CustomerController {
   @Get('profile')
   async profile(@Request() request) {
     const user = await this.customerService.findOne(request.user.id);
-    if (!user) { throw new NotFoundException('No user found!'); }
+    if (!user) { throw new UnauthorizedException('Not authorized to perform this action!'); }
     const { passwordHash, ...userWithoutPassHash } = user;
 
     return userWithoutPassHash;

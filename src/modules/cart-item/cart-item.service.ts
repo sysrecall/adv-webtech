@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Art } from '../art/entities/art.entity';
+import { Repository } from 'typeorm';
+import { CartItem } from './entities/cart-item.entity';
+import { Cart } from '../cart/entities/cart.entity';
 
 @Injectable()
 export class CartItemService {
-  create(createCartItemDto: CreateCartItemDto) {
-    return 'This action adds a new cartItem';
+  constructor(
+    @InjectRepository(Art) private readonly artRepository: Repository<Art>,
+    @InjectRepository(CartItem) private readonly cartItemRepository: Repository<CartItem>,
+  ) {}
+  async create(createCartItemDto: CreateCartItemDto) {
+    const art = await this.artRepository.findOneBy({id: createCartItemDto.artId});
+    if (!art) throw new PreconditionFailedException("Invalid art id.");
+
+    const {artId, ..._cartItem} = createCartItemDto;
+
+    const cartItem = this.cartItemRepository.create({
+      ..._cartItem,
+      art,
+    })
+
+    return this.cartItemRepository.save(cartItem);
   }
 
-  findAll() {
-    return `This action returns all cartItem`;
+  async findAll() {
+    return this.cartItemRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cartItem`;
+  async findOne(id: string) {
+    return this.cartItemRepository.findOneBy({id: id});
   }
 
-  update(id: number, updateCartItemDto: UpdateCartItemDto) {
-    return `This action updates a #${id} cartItem`;
+  async update(id: string, updateCartItemDto: UpdateCartItemDto) {
+    await this.cartItemRepository.update(id, updateCartItemDto);
+    return this.cartItemRepository.findBy({id: id});
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cartItem`;
+  async remove(id: string) {
+    return this.cartItemRepository.delete(id);
   }
 }

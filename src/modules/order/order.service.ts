@@ -1,26 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { OrderItem } from '../order-item/entities/order-item.entity';
+import { Repository } from 'typeorm';
+import { Customer } from '../customer/entities/customer.entity';
+import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrderService {
-  create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
+  constructor(
+    @InjectRepository(OrderItem) private readonly orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(Order) private readonly orderRepository: Repository<Order>,
+    @InjectRepository(Customer) private readonly customerRepository: Repository<Customer>,
+  ) {}
+
+  async create(createOrderDto: CreateOrderDto) {
+    const customer = await this.customerRepository.findOneBy({id: createOrderDto.customerId});
+    if (!customer) throw new PreconditionFailedException("Invalid customer id");
+
+    const orderItems = this.orderItemRepository.create(
+      (createOrderDto.orderItems ?? []).map(item => ({
+        ...item
+      }))
+    );
+
+    const order = this.orderRepository.create({
+      ...createOrderDto,
+      orderTime: new Date().toUTCString(),
+      customer,
+      orderItems: orderItems,
+    });
+
+    return this.orderRepository.save(order);
   }
 
-  findAll() {
-    return `This action returns all order`;
+  async findAll() {
+    return this.orderRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  async findOne(id: string) {
+    return this.orderRepository.findOneBy({ id: id });
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
+    await this.orderRepository.update(id, updateOrderDto);
+    return this.orderRepository.findBy({id: id});
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} order`;
-  }
+  async remove(id: string) {
+    await this.orderRepository.delete(id);
+  } 
 }

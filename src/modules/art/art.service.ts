@@ -1,26 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { CreateArtDto } from './dto/create-art.dto';
 import { UpdateArtDto } from './dto/update-art.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Art } from './entities/art.entity';
+import { Repository } from 'typeorm';
+import { Artist } from 'src/artist/entities/artist.entity';
 
 @Injectable()
 export class ArtService {
-  create(createArtDto: CreateArtDto) {
-    return 'This action adds a new art';
+  constructor(
+    @InjectRepository(Art) private readonly artRepository: Repository<Art>, 
+    @InjectRepository(Artist) private readonly artistRepository: Repository<Artist>,
+  ) {}
+
+  async create(createArtDto: CreateArtDto) {
+    const artist = await this.artistRepository.findOneBy({ id: createArtDto.artistId });    
+    if (!artist) throw new PreconditionFailedException("Invalid artist id.");
+
+    const {artistId, ..._art} = createArtDto;
+    const art = this.artRepository.create({
+      ..._art,
+      artist: artist
+    });
+
+    return this.artRepository.save(art);  
   }
 
-  findAll() {
-    return `This action returns all art`;
+  async findAll() {
+    return this.artRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} art`;
+  async findOne(id: string) {
+    return this.artRepository.findOneBy({id: id});
   }
 
-  update(id: number, updateArtDto: UpdateArtDto) {
-    return `This action updates a #${id} art`;
+  async update(id: string, updateArtDto: UpdateArtDto) {
+    await this.artRepository.update(id, updateArtDto);
+    return this.artRepository.findOneBy({id: id});
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} art`;
+  async remove(id: string) {
+    return this.artRepository.delete({id: id});
   }
 }
