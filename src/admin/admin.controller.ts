@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards, Res} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -55,8 +55,16 @@ export class AdminController {
   
 //? Admin SignIn endpoint 
  @Post('signin')
-  async signIn(@Body() AdminSignInDto: AdminSignInDto) {
-    return await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
+  async signIn(@Body() AdminSignInDto: AdminSignInDto,@Res({ passthrough: true }) res) {
+        // return await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
+    const { access_token } = await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
+    res.cookie('Authorization', `Bearer ${access_token}`, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
+    });
+    res.send();
   }
 
   //? Adminn profile endpoint
