@@ -5,8 +5,16 @@ import { MailerDto } from './dto/mailer.dto';
 
 @Injectable()
 export class MailerService {
-    sendWelcomeMail(email: string, username: string) {
-        throw new Error('Method not implemented.');
+    async sendWelcomeMail(email: string, username: string) {
+        const subject = 'Welcome to Art Store';
+        const html = `<h3>Welcome, ${username}!</h3><p>Thanks for registering as an artist at Art Store. We are excited to see your creations.</p>`;
+        const dto: MailerDto = {
+            recipients: [email],
+            subject,
+            html,
+            text: `Welcome, ${username}! Thanks for registering as an artist at Art Store.`
+        } as any;
+        return this.sendEmail(dto);
     }
     constructor(private readonly configService: ConfigService) {}
 
