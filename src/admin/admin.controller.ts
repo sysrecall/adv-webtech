@@ -12,12 +12,15 @@ import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { RequiredRole } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { Art } from 'src/modules/art/entities/art.entity';
+import { Order } from 'src/modules/order/entities/order.entity';
 
 @Controller('admin')
 export class AdminController {
   // authService: any;
   constructor(private readonly adminService: AdminService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    
   ) {}
   
 //? Admin registration endpoint with file upload
@@ -62,15 +65,15 @@ export class AdminController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
+      maxAge: parseInt(process.env.JWT_EXPIRES_IN ?? "3600000")
     });
     res.send();
   }
 
   //? Adminn profile endpoint
   
-@UseGuards(AuthGuard, RolesGuard) // Must be in this order
-@RequiredRole(Role.Admin) // This sets the required role
+@UseGuards(AuthGuard, RolesGuard) 
+@RequiredRole(Role.Admin) 
 @Get('profile')
   async profile(@Request() request) {
     console.log(request.user);
@@ -109,10 +112,10 @@ export class AdminController {
     return this.adminService.findByStatus('inactive');
   }
 
-  // @Get('age/older-than-40')
-  // findOlderThan40() {
-  //   return this.adminService.findOlderThan40();
-  // }
+  @Get('age/older-than-40')
+  findOlderThan40() {
+    return this.adminService.findOlderThan40();
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
@@ -124,29 +127,14 @@ export class AdminController {
   }
 
 
-    //? Routes for Admin-Customer relationship (OneToMany)
 
-  // @Post(':id/add-customer/:customerId')
-  // // @UseGuards(JwtAuthGuard)
-  // addCustomer(@Param('id') id: string, @Param('customerId') customerId: string) {
-  //   return this.adminService.addCustomer(+id, +customerId);
-  // }
 
-  // @Delete(':id/remove-customer/:customerId')
-  // // @UseGuards(JwtAuthGuard)
-  // removeCustomer(@Param('id') id: string, @Param('customerId') customerId: string) {
-  //   return this.adminService.removeCustomer(+id, +customerId);
-  // }
+    //? ---------------- CUSTOMER CRUD  ----------------
 
-  // @Get(':id/customers')
-  // // @UseGuards(JwtAuthGuard)
-  // getCustomers(@Param('id') id: string) {
-  //   return this.adminService.getCustomers(+id);
-  // }
-  @Post(':id/customers')
+@Post(':id/customers')
 createCustomer(
   @Param('id') id: string,
-  @Body() customerData: Partial<Customer>,  // Create a DTO if needed
+  @Body() customerData: Customer, 
 ) {
   return this.adminService.createCustomer(+id, customerData);
 }
@@ -155,7 +143,7 @@ createCustomer(
 updateCustomer(
   @Param('id') id: string,
   @Param('customerId') customerId: string,
-  @Body() updateData: Partial<Customer>,
+  @Body() updateData: Customer, 
 ) {
   return this.adminService.updateCustomer(+id, customerId, updateData);
 }
@@ -167,5 +155,37 @@ removeCustomerById(
 ) {
   return this.adminService.removeCustomerById(+id, customerId);
 }
+
+// ---------------- ART CRUD ----------------
+  // @Post(':id/art')
+  // createArt(@Param('id') id: string, @Body() data: Partial<Art>) {
+  //   return this.adminService.createArt(id, data);
+  // }
+
+  // @Get(':id/art')
+  // getAllArt(@Param('id') id: string) {
+  //   return this.adminService.getAllArt(id);
+  // }
+
+  // @Patch(':id/arts/:artId')
+  // updateArt(@Param('id') id: string, @Param('artId') artId: string, @Body() data: Partial<Art>) {
+  //   return this.adminService.updateArt(id, artId, data);
+  // }
+
+  // @Delete(':id/arts/:artId')
+  // deleteArt(@Param('id') id: string, @Param('artId') artId: string) {
+  //   return this.adminService.deleteArt(id, artId);
+  // }
+
+  // ---------------- ORDER UPDATE + DELETE ----------------
+  @Patch(':id/orders/:orderId')
+  updateOrder(@Param('id') id: string, @Param('orderId') orderId: string, @Body() data: Partial<Order>) {
+    return this.adminService.updateOrder(id, orderId, data);
+  }
+
+  @Delete(':id/orders/:orderId')
+  deleteOrder(@Param('id') id: string, @Param('orderId') orderId: string) {
+    return this.adminService.deleteOrder(id, orderId);
+  }
 
 }

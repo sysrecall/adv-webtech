@@ -20,6 +20,7 @@ import { MailerModule } from './modules/mailer/mailer.module';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
+    
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',

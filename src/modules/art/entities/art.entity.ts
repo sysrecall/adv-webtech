@@ -22,6 +22,6 @@ export class Art {
     @Column()
     desc: string;
     // admin: any;
-    @ManyToOne(() => Admin, admin => admin.art)
-    admin: Admin;
+  @ManyToOne(() => Admin, admin => admin.art, { onDelete: "SET NULL" })
+  admin: Admin;
 }
