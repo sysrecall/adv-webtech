@@ -5,6 +5,9 @@ import { MailerDto } from './dto/mailer.dto';
 
 @Injectable()
 export class MailerService {
+    sendWelcomeMail(email: string, username: string) {
+        throw new Error('Method not implemented.');
+    }
     constructor(private readonly configService: ConfigService) {}
 
     emailTransporter() {

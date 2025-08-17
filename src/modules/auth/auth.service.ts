@@ -3,6 +3,7 @@ import { CustomerService } from 'src/modules/customer/customer.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
 import { AdminService } from 'src/admin/admin.service';
+import { ArtistService } from 'src/artist/artist.service';
 //{}
 @Injectable()
 export class AuthService {
@@ -11,6 +12,7 @@ export class AuthService {
         private readonly jwtService: JwtService, 
         private readonly customerService: CustomerService,
         private readonly adminService: AdminService,
+        private readonly artistService: ArtistService,
     ) {}
     
     async signIn(username: string, pass: string, role: 'customer' | 'admin' | 'artist'): Promise<{ access_token: string }> {
@@ -19,9 +21,9 @@ export class AuthService {
             case 'admin':
                 user = await this.adminService.findOneByUsername(username);
                 break;
-            // case 'artist':
-            //     user = await this.artistService.findOneByUsername(username);
-            //     break;
+             case 'artist':
+                 user = await this.artistService.findOneByUsername(username);
+                 break;
             default:
                 user = await this.customerService.findOneByUsername(username);
                 break;
@@ -32,6 +34,7 @@ export class AuthService {
         const { passwordHash } = user;
         const result = await compare(pass, passwordHash);
 
+        
         if (!result) throw new UnauthorizedException();
 
         const payload = { id: user.id, username: user.username, role: role };
