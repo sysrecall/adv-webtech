@@ -20,12 +20,11 @@ export class CartService {
     const customer = await this.customerRepository.findOneBy({ id: createCartDto.customerId });
     if (!customer) throw new PreconditionFailedException("Invalid customer id");
     
-    const incomingItems = this.cartItemRepository.create(
+    const items = this.cartItemRepository.create(
       (createCartDto.cartItems ?? []).map(item => ({
         ...item,
         art: { id: item.artId },
-      }))
-    );
+      })));
 
     let cart = await this.cartRepository.findOne({
       where: { customer: { id: customer.id } },
@@ -33,11 +32,11 @@ export class CartService {
     });
 
     if (cart) {
-      cart.cartItems = (cart.cartItems ?? []).concat(incomingItems);
+      cart.cartItems = (cart.cartItems ?? []).concat(items);
     } else {
       cart = this.cartRepository.create({
         customer,
-        cartItems: incomingItems,
+        cartItems: items,
       });
     }
 

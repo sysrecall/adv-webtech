@@ -19,6 +19,6 @@ export class OrderItem {
     @Column({ nullable: true })
     url?: string;
 
-    @ManyToOne(() => Order, order => order.orderItems)
+    @ManyToOne(() => Order, order => order.orderItems, {cascade: true, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
     order: Order;
 }

@@ -11,7 +11,7 @@ export class Cart {
     @JoinColumn()
     customer: Customer
 
-    @OneToMany(() => CartItem, cartItem => cartItem.cart, { cascade: true, nullable: true})
+    @OneToMany(() => CartItem, cartItem => cartItem.cart, {nullable: true})
     cartItems?: CartItem[]
 
     getTotal() : number {

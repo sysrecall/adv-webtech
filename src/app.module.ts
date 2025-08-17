@@ -12,7 +12,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { OrderItemModule } from './modules/order-item/order-item.module';
 import { OrderModule } from './modules/order/order.module';
 import { CartItemModule } from './modules/cart-item/cart-item.module';
-import { MailerModule } from './modules/mailer/mailer.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -30,8 +30,21 @@ import { MailerModule } from './modules/mailer/mailer.module';
       autoLoadEntities: true,
       synchronize: true
   }),
+  MailerModule.forRoot({
+    transport: {
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT ?? '587'),
+      ignoreTLS: false,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+      }
+
+    }
+  }),
     AuthModule, AdminModule, ArtistModule, CustomerModule,
-    ArtModule, CartModule, OrderItemModule, OrderModule, CartItemModule, MailerModule,
+    ArtModule, CartModule, OrderItemModule, OrderModule, CartItemModule,
 ],
   controllers: [AppController],
   providers: [AppService],

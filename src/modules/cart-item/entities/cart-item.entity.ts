@@ -16,7 +16,7 @@ export class CartItem {
     @ManyToOne(() => Art)
     art: Art;
 
-    @ManyToOne(() => Cart, cart => cart.cartItems)
+    @ManyToOne(() => Cart, cart => cart.cartItems, {cascade: true, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
     @JoinColumn()
     cart: Cart;
 }
