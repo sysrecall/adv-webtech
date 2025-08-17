@@ -6,22 +6,25 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { Customer } from 'src/modules/customer/entities/customer.entity';
 import * as bcrypt from 'bcrypt';
+import { Art } from 'src/modules/art/entities/art.entity';
+import { Order } from 'src/modules/order/entities/order.entity';
 
 @Injectable()
 export class AdminService {
+  artRepo: any;
+  orderRepo: any;
 
   constructor(
     @InjectRepository(Admin)
     private readonly adminRepository: Repository<Admin>,
     @InjectRepository(Customer)
-    private readonly customerRepository: Repository<Customer>
+    private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(Art)
+     private readonly artRepository: Repository<Art>,
+    @InjectRepository(Order)
+     private readonly orderRepository: Repository<Order>
   ) {}
-  // create(createAdminDto: CreateAdminDto) {
-    
-  //   console.log(createAdminDto)
-  //   return `This action returns all admin`;
 
-  // }
 
 async create(createAdminDto: CreateAdminDto) {
   const { nidImage, password, ...rest } = createAdminDto;
@@ -71,17 +74,14 @@ findOne(id: number) {
   });
 }
 //? For auth signin
-  // async findOneByUsername(username: string) {
-  //   let admin = this.adminRepository.findOneBy({ username: username });
-  //   return admin;
-  // }
+
 async findOneByUsername(username: string) {
   const admin = await this.adminRepository.findOne({
     where: { username },
     select: {
       id: true,
       username: true,
-      password: true, // Include password in the select
+      password: true, 
       fullName: true,
       email: true,
       status: true,
@@ -90,7 +90,6 @@ async findOneByUsername(username: string) {
 
   if (!admin) return null;
 
-  // Rename 'password' to 'passwordHash' to match AuthService expectations
   return {
     ...admin,
     passwordHash: admin.password, // Critical fix
@@ -151,7 +150,7 @@ async updateStatus(id: number, status: 'active' | 'inactive') {
       email: true,
       phone: true,
       gender: true,
-    }; // Exclude nid and nidImage
+    }; 
     return this.adminRepository.find({
       where: { age: MoreThan(40) },
       select: selectFields,
@@ -177,36 +176,9 @@ async updateStatus(id: number, status: 'active' | 'inactive') {
   }
 
 
-  //? Relationship CRUD operations for Admin -> Customer (OneToMany)
+  //? ---------------- CUSTOMER CRUD  ----------------
 
-  // async addCustomer(adminId: number, customerId: number) {
-  //   const admin = await this.findOne(adminId);
-  //   const customer = await this.customerRepository.findOneBy({ id: customerId.toString() });
-  //   if (!admin || !customer) {
-  //     throw new HttpException('Admin or Customer not found', 404);
-  //   }
-  //   admin.customers.push(customer);
-  //   return this.adminRepository.save(admin);
-  // }
-
-  // async removeCustomer(adminId: number, customerId: number) {
-  //   const admin = await this.findOne(adminId);
-  //   if (!admin) {
-  //     throw new HttpException('Admin not found', 404);
-  //   }
-  //   admin.customers = admin.customers.filter(c => c.id !== customerId.toString());
-  //   return this.adminRepository.save(admin);
-  // }
-
-  // async getCustomers(adminId: number) {
-  //   const admin = await this.findOne(adminId);
-  //   if (!admin) {
-  //     throw new HttpException('Admin not found', 404);
-  //   }
-  //   return admin.customers;
-  // }
-
-  async createCustomer(adminId: number, customerData: Partial<Customer>) {
+async createCustomer(adminId: number, customerData: Partial<Customer>) {
   const admin = await this.findOne(adminId);
   if (!admin) throw new HttpException('Admin not found', 404);
 
@@ -241,4 +213,71 @@ async removeCustomerById(adminId: number, customerId: string) {
   return this.customerRepository.remove(customer);
 }
 
+// ---------------- ART CRUD ----------------
+// async createArt(adminId: string, data: Partial<Art>) {
+//   const admin = await this.findOne(+adminId);
+//   if (!admin) throw new HttpException('Admin not found', 404);
+
+//   // Ensure artist is attached correctly
+//   const art = this.artRepository.create({
+//     ...data,
+//     admin,
+//     artist: data.artist ? { id: data.artist['id'] } as any : null,
+//   });
+
+//   return this.artRepository.save(art);
+// }
+
+
+//   async getAllArt(adminId: string) {
+//     return this.artRepository.find({ where: { admin: { id: +adminId } }, relations: ['artist', 'admin'] });
+//   }
+
+//   async updateArt(adminId: string, artId: string, data: Partial<Art>) {
+//     const art = await this.artRepository.findOne({
+//       where: { id: artId, admin: { id: +adminId } },
+//       relations: ['admin'],
+//     });
+//     if (!art) throw new HttpException('Art not found under this admin', 404);
+
+//     Object.assign(art, data);
+//     return this.artRepository.save(art);
+//   }
+
+//   async deleteArt(adminId: string, artId: string) {
+//     const art = await this.artRepository.findOne({
+//       where: { id: artId, admin: { id: +adminId } },
+//       relations: ['admin'],
+//     });
+//     if (!art) throw new HttpException('Art not found under this admin', 404);
+
+//     return this.artRepository.remove(art);
+//   }
+
+  // ---------------- ORDER UPDATE + DELETE ----------------
+  async updateOrder(adminId: string, orderId: string, data: Partial<Order>) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, admin: { id: +adminId } },
+      relations: ['admin', 'customer', 'orderItems'],
+    });
+    if (!order) throw new HttpException('Order not found under this admin', 404);
+
+    Object.assign(order, data);
+    return this.orderRepository.save(order);
+  }
+
+  async deleteOrder(adminId: string, orderId: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, admin: { id: +adminId } },
+      relations: ['admin'],
+    });
+    if (!order) throw new HttpException('Order not found under this admin', 404);
+
+    return this.orderRepository.remove(order);
+  }
+ async sendEmail(to: string, subject: string, body: string) {
+    console.log(`Email sent to ${to}: ${subject}`);
+    // here you would integrate nodemailer or another mailer
+    return { success: true };
+  }
 }
