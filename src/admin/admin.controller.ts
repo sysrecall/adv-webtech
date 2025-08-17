@@ -14,13 +14,16 @@ import { RequiredRole } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
+import { Response } from 'express';
+import { MailerService } from 'src/modules/mailer/mailer.service';
 
 @Controller('admin')
 export class AdminController {
+  // mailerService: any;
   // authService: any;
   constructor(private readonly adminService: AdminService,
     private readonly authService: AuthService,
-    
+    private readonly mailerService: MailerService
   ) {}
   
 //? Admin registration endpoint with file upload
@@ -57,17 +60,38 @@ export class AdminController {
 
   
 //? Admin SignIn endpoint 
- @Post('signin')
-  async signIn(@Body() AdminSignInDto: AdminSignInDto,@Res({ passthrough: true }) res) {
-        // return await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
-    const { access_token } = await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
+  @Post('signin')
+  async signIn(
+    @Body() adminSignInDto: AdminSignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // 🔹 Authenticate admin
+    const { access_token } = await this.authService.signIn(
+      adminSignInDto.username,
+      adminSignInDto.password,
+      'admin',
+    );
+
+    // 🔹 Set cookie with JWT
     res.cookie('Authorization', `Bearer ${access_token}`, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: parseInt(process.env.JWT_EXPIRES_IN ?? "3600000")
+      maxAge: parseInt(process.env.JWT_EXPIRES_IN ?? '3600000'),
     });
-    res.send();
+
+    // 🔹 Send login notification email
+    await this.mailerService.sendEmail({
+      recipients: [process.env.EMAIL_USER || 'sifat.sai3@gmail.com'], // you can also use adminSignInDto.email if available
+      subject: 'Admin Login Alert',
+      html: `<h3>Hello Admin,</h3>
+             <p>You have successfully signed in at: ${new Date().toLocaleString()}</p>
+             <p>If this wasn’t you, please secure your account immediately.</p>`,
+      text: `You signed in at ${new Date().toLocaleString()}`,
+    });
+
+    // ✅ Response
+    return { message: 'SignIn successful, email sent' };
   }
 
   //? Adminn profile endpoint

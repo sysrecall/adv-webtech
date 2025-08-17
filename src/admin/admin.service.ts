@@ -275,5 +275,9 @@ async removeCustomerById(adminId: number, customerId: string) {
 
     return this.orderRepository.remove(order);
   }
-
+ async sendEmail(to: string, subject: string, body: string) {
+    console.log(`Email sent to ${to}: ${subject}`);
+    // here you would integrate nodemailer or another mailer
+    return { success: true };
+  }
 }
