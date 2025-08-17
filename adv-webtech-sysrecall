@@ -1,0 +1,533 @@
+commit b88b6724b8b27c9ee480c0b66e2b818e51801826
+Author: sabedbinsarwar <sabedbinsarwar@gmail.com>
+Date:   Sun Aug 17 23:36:45 2025 +0600
+
+    problem solved
+
+diff --git a/src/admin/admin.module.ts b/src/admin/admin.module.ts
+index 5ffb1ac..626d0b2 100644
+--- a/src/admin/admin.module.ts
++++ b/src/admin/admin.module.ts
+@@ -2,14 +2,14 @@ import { forwardRef, Module } from '@nestjs/common';
+ import { AdminService } from './admin.service';
+ import { AdminController } from './admin.controller';
+ import { TypeOrmModule } from '@nestjs/typeorm';
+-import { Admin } from './entities/admin.entity'; // Update path as needed
+-import { Customer } from '../modules/customer/entities/customer.entity'; // Update path as needed
+-import { AuthModule } from '../modules/auth/auth.module'; // Update path as needed
++import { Admin } from './entities/admin.entity';
++import { Customer } from 'src/modules/customer/entities/customer.entity';
++import { AuthModule } from 'src/modules/auth/auth.module';
+ import { JwtModule } from '@nestjs/jwt';
+ import { Art } from 'src/modules/art/entities/art.entity';
+ import { Order } from 'src/modules/order/entities/order.entity';
+ import { ArtModule } from 'src/modules/art/art.module';
+-import { MailerModule } from '../modules/mailer/mailer.module';
++import { MailerModule } from 'src/modules/mailer/mailer.module';
+ import { OrderModule } from 'src/modules/order/order.module';
+ 
+ @Module({
+diff --git a/src/artist/artist.controller.ts b/src/artist/artist.controller.ts
+new file mode 100644
+index 0000000..b93e2a6
+--- /dev/null
++++ b/src/artist/artist.controller.ts
+@@ -0,0 +1,66 @@
++import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Req, Res, UseGuards, UsePipes, ValidationPipe, UnauthorizedException } from '@nestjs/common';
++import { ArtistService } from './artist.service';
++import { CreateArtistDto } from './dto/create-artist.dto';
++import { UpdateArtistDto } from './dto/update-artist.dto';
++import { LoginArtistDto } from './dto/login-artist.dto';
++import { AuthService } from 'src/modules/auth/auth.service';
++import { Response } from 'express';
++import { AuthGuard } from 'src/common/guards/auth.guard';
++import { RolesGuard } from 'src/common/guards/role.guard';
++import { RequiredRole } from 'src/common/decorators/role.decorator';
++import { Role } from 'src/common/enums/role.enum';
++
++@Controller('artist')
++export class ArtistController {
++  constructor(
++    private readonly artistService: ArtistService,
++    private readonly authService: AuthService,
++  ) {}
++
++  @Post('register')
++  @UsePipes(new ValidationPipe({ transform: true }))
++  async register(@Body() dto: CreateArtistDto) {
++    return this.artistService.create(dto);
++  }
++
++  @HttpCode(HttpStatus.OK)
++  @Post('login')
++  async login(@Body() dto: LoginArtistDto, @Res({ passthrough: true }) res: Response) {
++    const { access_token } = await this.authService.signIn(dto.username, dto.password, 'artist');
++
++    res.cookie('Authorization', `Bearer ${access_token}`, {
++      httpOnly: true,
++      secure: true,
++      sameSite: 'strict',
++      maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? '3600000'),
++    });
++
++    return { message: 'Login successful' };
++  }
++
++  @Get()
++  async findAll() {
++    return this.artistService.findAll();
++  }
++
++  @Get(':id')
++  async findOne(@Param('id') id: string) {
++    return this.artistService.findOne(id);
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @RequiredRole(Role.Artist)
++  @Put(':id')
++  async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateArtistDto) {
++    if (req.user.id !== id) throw new UnauthorizedException('Not authorized to update this artist');
++    return this.artistService.update(id, dto);
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @RequiredRole(Role.Artist)
++  @Delete(':id')
++  async remove(@Param('id') id: string, @Req() req) {
++    if (req.user.id !== id) throw new UnauthorizedException('Not authorized to delete this artist');
++    return this.artistService.remove(id);
++  }
++}
+diff --git a/src/artist/artist.module.ts b/src/artist/artist.module.ts
+new file mode 100644
+index 0000000..407c7e3
+--- /dev/null
++++ b/src/artist/artist.module.ts
+@@ -0,0 +1,21 @@
++import { forwardRef, Module } from '@nestjs/common';
++import { TypeOrmModule } from '@nestjs/typeorm';
++import { Artist } from './entities/artist.entity';
++import { ArtistService } from './artist.service';
++import { ArtistController } from './artist.controller';
++import { AuthModule } from 'src/modules/auth/auth.module';
++import { JwtModule } from '@nestjs/jwt';
++import { MailerModule } from 'src/modules/mailer/mailer.module';
++
++@Module({
++  imports: [
++    TypeOrmModule.forFeature([Artist]),
++    forwardRef(() => AuthModule),
++    JwtModule,
++    MailerModule,
++  ],
++  controllers: [ArtistController],
++  providers: [ArtistService],
++  exports: [ArtistService],
++})
++export class ArtistModule {}
+diff --git a/src/artist/artist.service.ts b/src/artist/artist.service.ts
+new file mode 100644
+index 0000000..020d4d3
+--- /dev/null
++++ b/src/artist/artist.service.ts
+@@ -0,0 +1,89 @@
++import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
++import { InjectRepository } from '@nestjs/typeorm';
++import { Repository } from 'typeorm';
++import { Artist } from './entities/artist.entity';
++import { CreateArtistDto } from './dto/create-artist.dto';
++import { UpdateArtistDto } from './dto/update-artist.dto';
++import * as bcrypt from 'bcrypt';
++import { MailerService } from 'src/modules/mailer/mailer.service';
++
++@Injectable()
++export class ArtistService {
++  constructor(
++    @InjectRepository(Artist)
++    private readonly artistRepository: Repository<Artist>,
++    private readonly mailerService: MailerService,
++  ) {}
++
++  async create(dto: CreateArtistDto) {
++    const existsByUsername = await this.artistRepository.findOne({ where: { username: dto.username } });
++    if (existsByUsername) throw new BadRequestException('Username already exists');
++
++    const existsByEmail = await this.artistRepository.findOne({ where: { email: dto.email } });
++    if (existsByEmail) throw new BadRequestException('Email already exists');
++
++    const salt = await bcrypt.genSalt(10);
++    const passwordHash = await bcrypt.hash(dto.password, salt);
++
++    const artist = this.artistRepository.create({
++      username: dto.username,
++      email: dto.email,
++      bio: dto.bio ?? null,
++      passwordHash,
++    });
++
++    const saved = await this.artistRepository.save(artist);
++
++    // fire-and-forget welcome email (don't block user creation on mail failure)
++    this.mailerService.sendWelcomeMail(saved.email, saved.username).catch(() => undefined);
++
++    return saved;
++  }
++
++  async findAll() {
++    return this.artistRepository.find();
++  }
++
++  async findOne(id: string) {
++    const artist = await this.artistRepository.findOne({ where: { id } });
++    if (!artist) throw new NotFoundException('Artist not found');
++    return artist;
++  }
++
++  async findOneByUsername(username: string) {
++    const artist = await this.artistRepository.findOne({ where: { username } });
++    if (!artist) return null;
++    return artist;
++  }
++
++  async update(id: string, dto: UpdateArtistDto) {
++    const artist = await this.artistRepository.findOne({ where: { id } });
++    if (!artist) throw new NotFoundException('Artist not found');
++
++    if (dto.username && dto.username !== artist.username) {
++      const dup = await this.artistRepository.findOne({ where: { username: dto.username } });
++      if (dup) throw new BadRequestException('Username already exists');
++    }
++    if (dto.email && dto.email !== artist.email) {
++      const dup = await this.artistRepository.findOne({ where: { email: dto.email } });
++      if (dup) throw new BadRequestException('Email already exists');
++    }
++
++    if (dto.password) {
++      const salt = await bcrypt.genSalt(10);
++      artist.passwordHash = await bcrypt.hash(dto.password, salt);
++    }
++
++    if (dto.username !== undefined) artist.username = dto.username;
++    if (dto.email !== undefined) artist.email = dto.email;
++    if (dto.bio !== undefined) artist.bio = dto.bio;
++
++    return this.artistRepository.save(artist);
++  }
++
++  async remove(id: string) {
++    const artist = await this.artistRepository.findOne({ where: { id } });
++    if (!artist) throw new NotFoundException('Artist not found');
++    return this.artistRepository.remove(artist);
++  }
++}
+diff --git a/src/artist/dto/create-artist.dto.ts b/src/artist/dto/create-artist.dto.ts
+new file mode 100644
+index 0000000..4bda105
+--- /dev/null
++++ b/src/artist/dto/create-artist.dto.ts
+@@ -0,0 +1,19 @@
++import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
++
++export class CreateArtistDto {
++  @IsString()
++  @IsNotEmpty()
++  username: string;
++
++  @MinLength(6)
++  @Matches(/\S*[A-Z]\S*/g, { message: 'password must contain one uppercase letter' })
++  password: string;
++
++  @IsNotEmpty()
++  @IsEmail()
++  email: string;
++
++  @IsOptional()
++  @IsString()
++  bio?: string;
++}
+diff --git a/src/artist/dto/login-artist.dto.ts b/src/artist/dto/login-artist.dto.ts
+new file mode 100644
+index 0000000..9f2359f
+--- /dev/null
++++ b/src/artist/dto/login-artist.dto.ts
+@@ -0,0 +1,9 @@
++import { IsString } from 'class-validator';
++
++export class LoginArtistDto {
++  @IsString()
++  username: string;
++
++  @IsString()
++  password: string;
++}
+diff --git a/src/artist/dto/update-artist.dto.ts b/src/artist/dto/update-artist.dto.ts
+new file mode 100644
+index 0000000..de21d0c
+--- /dev/null
++++ b/src/artist/dto/update-artist.dto.ts
+@@ -0,0 +1,10 @@
++import { PartialType } from '@nestjs/mapped-types';
++import { CreateArtistDto } from './create-artist.dto';
++import { IsOptional, Matches, MinLength } from 'class-validator';
++
++export class UpdateArtistDto extends PartialType(CreateArtistDto) {
++  @IsOptional()
++  @MinLength(6)
++  @Matches(/\S*[A-Z]\S*/g, { message: 'password must contain one uppercase letter' })
++  password?: string;
++}
+diff --git a/src/artist/entities/artist.entity.ts b/src/artist/entities/artist.entity.ts
+new file mode 100644
+index 0000000..4145435
+--- /dev/null
++++ b/src/artist/entities/artist.entity.ts
+@@ -0,0 +1,23 @@
++import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
++import { Art } from 'src/modules/art/entities/art.entity';
++
++@Entity('artist')
++export class Artist implements User {
++  @PrimaryGeneratedColumn('uuid')
++  id: string;
++
++  @Column({ type: 'varchar', unique: true })
++  username: string;
++
++  @Column({ type: 'varchar', unique: true })
++  email: string;
++
++  @Column({ type: 'varchar' })
++  passwordHash: string;
++
++  @Column({ type: 'text', nullable: true })
++  bio?: string | null;
++
++  @OneToMany(() => Art, art => art.artist)
++  arts: Art[];
++}
+diff --git a/src/modules/art/art.controller.ts b/src/modules/art/art.controller.ts
+new file mode 100644
+index 0000000..c78345d
+--- /dev/null
++++ b/src/modules/art/art.controller.ts
+@@ -0,0 +1,45 @@
++import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
++import { ArtService } from './art.service';
++import { CreateArtDto } from './dto/create-art.dto';
++import { UpdateArtDto } from './dto/update-art.dto';
++import { AuthGuard } from 'src/common/guards/auth.guard';
++import { RolesGuard } from 'src/common/guards/role.guard';
++import { RequiredRole } from 'src/common/decorators/role.decorator';
++import { Role } from 'src/common/enums/role.enum';
++
++@Controller()
++export class ArtController {
++  constructor(private readonly artService: ArtService) {}
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @RequiredRole(Role.Artist)
++  @Post('art')
++  @UsePipes(new ValidationPipe({ transform: true }))
++  async create(@Req() req, @Body() dto: CreateArtDto) {
++    return this.artService.create(req.user.id, dto);
++  }
++
++  @Get('art')
++  async findAll() {
++    return this.artService.findAll();
++  }
++
++  @Get('artist/:id/art')
++  async findByArtist(@Param('id') id: string) {
++    return this.artService.findByArtist(id);
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @RequiredRole(Role.Artist)
++  @Patch('art/:id')
++  async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateArtDto) {
++    return this.artService.update(id, req.user.id, dto);
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @RequiredRole(Role.Artist)
++  @Delete('art/:id')
++  async remove(@Param('id') id: string, @Req() req) {
++    return this.artService.remove(id, req.user.id);
++  }
++}
+diff --git a/src/modules/art/art.module.ts b/src/modules/art/art.module.ts
+new file mode 100644
+index 0000000..fbd6309
+--- /dev/null
++++ b/src/modules/art/art.module.ts
+@@ -0,0 +1,14 @@
++import { Module } from '@nestjs/common';
++import { TypeOrmModule } from '@nestjs/typeorm';
++import { Art } from './entities/art.entity';
++import { ArtService } from './art.service';
++import { ArtController } from './art.controller';
++import { Artist } from 'src/artist/entities/artist.entity';
++
++@Module({
++  imports: [TypeOrmModule.forFeature([Art, Artist])],
++  controllers: [ArtController],
++  providers: [ArtService],
++  exports: [ArtService],
++})
++export class ArtModule {}
+diff --git a/src/modules/art/art.service.ts b/src/modules/art/art.service.ts
+new file mode 100644
+index 0000000..c12a9a0
+--- /dev/null
++++ b/src/modules/art/art.service.ts
+@@ -0,0 +1,51 @@
++import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
++import { InjectRepository } from '@nestjs/typeorm';
++import { Repository } from 'typeorm';
++import { Art } from './entities/art.entity';
++import { CreateArtDto } from './dto/create-art.dto';
++import { UpdateArtDto } from './dto/update-art.dto';
++import { Artist } from 'src/artist/entities/artist.entity';
++
++@Injectable()
++export class ArtService {
++  constructor(
++    @InjectRepository(Art) private readonly artRepository: Repository<Art>,
++    @InjectRepository(Artist) private readonly artistRepository: Repository<Artist>,
++  ) {}
++
++  async create(artistId: string, dto: CreateArtDto) {
++    const artist = await this.artistRepository.findOne({ where: { id: artistId } });
++    if (!artist) throw new NotFoundException('Artist not found');
++
++    const art = this.artRepository.create({
++      ...dto,
++      artist,
++    });
++    return this.artRepository.save(art);
++  }
++
++  async findAll() {
++    return this.artRepository.find({ relations: ['artist'] });
++  }
++
++  async findByArtist(artistId: string) {
++    return this.artRepository.find({ where: { artist: { id: artistId } }, relations: ['artist'] });
++  }
++
++  async update(artId: string, artistId: string, dto: UpdateArtDto) {
++    const art = await this.artRepository.findOne({ where: { id: artId }, relations: ['artist'] });
++    if (!art) throw new NotFoundException('Art not found');
++    if (art.artist.id !== artistId) throw new ForbiddenException('Not authorized to update this art');
++
++    Object.assign(art, dto);
++    return this.artRepository.save(art);
++  }
++
++  async remove(artId: string, artistId: string) {
++    const art = await this.artRepository.findOne({ where: { id: artId }, relations: ['artist'] });
++    if (!art) throw new NotFoundException('Art not found');
++    if (art.artist.id !== artistId) throw new ForbiddenException('Not authorized to delete this art');
++
++    return this.artRepository.remove(art);
++  }
++}
+diff --git a/src/modules/art/dto/create-art.dto.ts b/src/modules/art/dto/create-art.dto.ts
+new file mode 100644
+index 0000000..e426134
+--- /dev/null
++++ b/src/modules/art/dto/create-art.dto.ts
+@@ -0,0 +1,15 @@
++import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
++
++export class CreateArtDto {
++  @IsString()
++  @IsNotEmpty()
++  title: string;
++
++  @IsOptional()
++  @IsString()
++  description?: string;
++
++  @IsNumber()
++  @Min(0)
++  price: number;
++}
+diff --git a/src/modules/art/dto/update-art.dto.ts b/src/modules/art/dto/update-art.dto.ts
+new file mode 100644
+index 0000000..a0c57b1
+--- /dev/null
++++ b/src/modules/art/dto/update-art.dto.ts
+@@ -0,0 +1,4 @@
++import { PartialType } from '@nestjs/mapped-types';
++import { CreateArtDto } from './create-art.dto';
++
++export class UpdateArtDto extends PartialType(CreateArtDto) {}
+diff --git a/src/modules/art/entities/art.entity.ts b/src/modules/art/entities/art.entity.ts
+new file mode 100644
+index 0000000..fd75879
+--- /dev/null
++++ b/src/modules/art/entities/art.entity.ts
+@@ -0,0 +1,24 @@
++import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
++import { Artist } from 'src/artist/entities/artist.entity';
++import { Admin } from 'src/admin/entities/admin.entity';
++
++@Entity('art')
++export class Art {
++  @PrimaryGeneratedColumn('uuid')
++  id: string;
++
++  @Column({ type: 'varchar' })
++  title: string;
++
++  @Column({ type: 'text', nullable: true })
++  description?: string | null;
++
++  @Column({ type: 'decimal' })
++  price: number;
++
++  @ManyToOne(() => Artist, artist => artist.arts, { onDelete: 'CASCADE' })
++  artist: Artist;
++
++  @ManyToOne(() => Admin, admin => admin.art, { nullable: true, onDelete: 'SET NULL' })
++  admin?: Admin | null;
++}
+diff --git a/src/modules/mailer/mailer.service.ts b/src/modules/mailer/mailer.service.ts
+index cfdda3a..81195c4 100644
+--- a/src/modules/mailer/mailer.service.ts
++++ b/src/modules/mailer/mailer.service.ts
+@@ -5,8 +5,16 @@ import { MailerDto } from './dto/mailer.dto';
+ 
+ @Injectable()
+ export class MailerService {
+-    sendWelcomeMail(email: string, username: string) {
+-        throw new Error('Method not implemented.');
++    async sendWelcomeMail(email: string, username: string) {
++        const subject = 'Welcome to Art Store';
++        const html = `<h3>Welcome, ${username}!</h3><p>Thanks for registering as an artist at Art Store. We are excited to see your creations.</p>`;
++        const dto: MailerDto = {
++            recipients: [email],
++            subject,
++            html,
++            text: `Welcome, ${username}! Thanks for registering as an artist at Art Store.`
++        } as any;
++        return this.sendEmail(dto);
+     }
+     constructor(private readonly configService: ConfigService) {}
+ 
+diff --git a/src/modules/order-item/order-item.service.ts b/src/modules/order-item/order-item.service.ts
+index 2447096..c4c9a89 100644
+--- a/src/modules/order-item/order-item.service.ts
++++ b/src/modules/order-item/order-item.service.ts
+@@ -16,7 +16,7 @@ export class OrderItemService {
+ 
+   }
+   async create(createOrderItemDto: CreateOrderItemDto) {
+-    const artist = await this.artistRepository.findOneBy({id: +createOrderItemDto.artistId});
++    const artist = await this.artistRepository.findOneBy({id: createOrderItemDto.artistId});
+     if (!artist) throw new PreconditionFailedException("Invalid artist id.");
+ 
+     const {artistId, ..._orderItem} = createOrderItemDto;
