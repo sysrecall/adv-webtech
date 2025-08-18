@@ -35,7 +35,7 @@ export class ArtistService {
     const saved = await this.artistRepository.save(artist);
 
     // fire-and-forget welcome email (don't block user creation on mail failure)
-    this.mailerService.sendWelcomeMail(saved.email, saved.username).catch(() => undefined);
+    // this.mailerService.sendWelcomeMail(saved.email, saved.username).catch(() => undefined);
 
     return saved;
   }
@@ -55,6 +55,18 @@ export class ArtistService {
     if (!artist) return null;
     return artist;
   }
+
+  // async findOneByUsername(username: string) {
+  //   if (!username) return null; // prevent empty username
+  //   const artist = await this.artistRepository.findOne({
+  //     where: { username },
+  //   });
+  //   return artist ?? null;
+  // }
+  
+  
+  
+
 
   async update(id: string, dto: UpdateArtistDto) {
     const artist = await this.artistRepository.findOne({ where: { id } });
