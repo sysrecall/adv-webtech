@@ -12,7 +12,6 @@ export class ArtistService {
   constructor(
     @InjectRepository(Artist)
     private readonly artistRepository: Repository<Artist>,
-    private readonly mailerService: MailerService,
   ) {}
 
   async create(dto: CreateArtistDto) {
@@ -34,9 +33,6 @@ export class ArtistService {
 
     const saved = await this.artistRepository.save(artist);
 
-    // fire-and-forget welcome email (don't block user creation on mail failure)
-    // this.mailerService.sendWelcomeMail(saved.email, saved.username).catch(() => undefined);
-
     return saved;
   }
 
@@ -55,16 +51,6 @@ export class ArtistService {
     if (!artist) return null;
     return artist;
   }
-
-  // async findOneByUsername(username: string) {
-  //   if (!username) return null; // prevent empty username
-  //   const artist = await this.artistRepository.findOne({
-  //     where: { username },
-  //   });
-  //   return artist ?? null;
-  // }
-  
-  
   
 
 
