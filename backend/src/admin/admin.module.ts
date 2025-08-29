@@ -9,11 +9,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { ArtModule } from 'src/modules/art/art.module';
-import { MailerModule } from '@nestjs-modules/mailer';
+// import { MailerModule } from '@nestjs-modules/mailer';
 import { OrderModule } from 'src/modules/order/order.module';
 
 @Module({
-  imports:  [forwardRef(() => AuthModule), TypeOrmModule.forFeature([Admin,Customer ,Art, Order]), forwardRef(() => ArtModule),forwardRef(() => OrderModule),JwtModule,MailerModule], 
+  imports:  [forwardRef(() => AuthModule), TypeOrmModule.forFeature([Admin,Customer ,Art, Order]), forwardRef(() => ArtModule),forwardRef(() => OrderModule),JwtModule], 
   controllers: [AdminController],
   providers: [AdminService],
   exports: [AdminService]

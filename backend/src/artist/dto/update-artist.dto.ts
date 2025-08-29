@@ -7,4 +7,13 @@ export class UpdateArtistDto extends PartialType(CreateArtistDto) {
   @MinLength(6)
   @Matches(/\S*[A-Z]\S*/g, { message: 'password must contain one uppercase letter' })
   password?: string;
+
+  @IsOptional()
+  username?: string;
+
+  @IsOptional()
+  email?: string;
+
+  @IsOptional()
+  bio?: string;
 }
