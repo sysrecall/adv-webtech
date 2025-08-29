@@ -15,7 +15,7 @@ import { Role } from 'src/common/enums/role.enum';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { Response } from 'express';
-import { MailerService } from 'src/modules/mailer/mailer.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Controller('admin')
 export class AdminController {
@@ -81,8 +81,8 @@ export class AdminController {
     });
 
     // 🔹 Send login notification email
-    await this.mailerService.sendEmail({
-      recipients: [process.env.EMAIL_USER || 'sifat.sai3@gmail.com'], // you can also use adminSignInDto.email if available
+    await this.mailerService.sendMail({
+      to: [process.env.EMAIL_USER || 'sifat.sai3@gmail.com'], // you can also use adminSignInDto.email if available
       subject: 'Admin Login Alert',
       html: `<h3>Hello Admin,</h3>
              <p>You have successfully signed in at: ${new Date().toLocaleString()}</p>

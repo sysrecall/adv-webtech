@@ -9,7 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { ArtModule } from 'src/modules/art/art.module';
-import { MailerModule } from 'src/modules/mailer/mailer.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { OrderModule } from 'src/modules/order/order.module';
 
 @Module({

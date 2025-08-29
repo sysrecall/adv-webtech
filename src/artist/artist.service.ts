@@ -5,7 +5,7 @@ import { Artist } from './entities/artist.entity';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from 'src/modules/mailer/mailer.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class ArtistService {
