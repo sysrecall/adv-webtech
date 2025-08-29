@@ -1,45 +1,93 @@
-import { Injectable, PreconditionFailedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Art } from './entities/art.entity';
 import { CreateArtDto } from './dto/create-art.dto';
 import { UpdateArtDto } from './dto/update-art.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Art } from './entities/art.entity';
-import { Repository } from 'typeorm';
 import { Artist } from 'src/artist/entities/artist.entity';
 
 @Injectable()
 export class ArtService {
   constructor(
-    @InjectRepository(Art) private readonly artRepository: Repository<Art>, 
-    @InjectRepository(Artist) private readonly artistRepository: Repository<Artist>,
+    @InjectRepository(Art)
+    private readonly artRepository: Repository<Art>,
+    @InjectRepository(Artist)
+    private readonly artistRepository: Repository<Artist>,
   ) {}
 
-  async create(createArtDto: CreateArtDto) {
-    const artist = await this.artistRepository.findOneBy({ id: createArtDto.artistId });    
-    if (!artist) throw new PreconditionFailedException("Invalid artist id.");
-
-    const {artistId, ..._art} = createArtDto;
-    const art = this.artRepository.create({
-      ..._art,
-      artist: artist
+  async create(artistId: string, dto: CreateArtDto) {
+    const artist = await this.artistRepository.findOne({
+      where: { id: artistId },
     });
+    if (!artist) throw new NotFoundException('Artist not found');
 
-    return this.artRepository.save(art);  
+    const art = this.artRepository.create({
+      ...dto,
+      artist,
+    });
+    return this.artRepository.save(art);
   }
 
   async findAll() {
-    return this.artRepository.find();
+    return this.artRepository.find({ relations: ['artist'] });
   }
 
-  async findOne(id: string) {
-    return this.artRepository.findOneBy({id: id});
+  async findOne(artId: string) {
+    const art = await this.artRepository.findOne({
+      where: { id: artId },
+      relations: ['artist'],
+    });
+
+    if (!art) {
+      throw new NotFoundException('Art not found');
+    }
+
+    return art;
   }
 
-  async update(id: string, updateArtDto: UpdateArtDto) {
-    await this.artRepository.update(id, updateArtDto);
-    return this.artRepository.findOneBy({id: id});
+  async update(artId: string, artistId: string, dto: UpdateArtDto) {
+    try {
+      const art = await this.artRepository.findOne({
+        where: { id: artId },
+        relations: ['artist'],
+      });
+  
+      if (!art) throw new NotFoundException('Art not found');
+  
+      if (String(art.artist.id) !== String(artistId)) {
+        throw new ForbiddenException('Not authorized to update this art');
+      }
+      
+  
+      const updated = this.artRepository.merge(art, dto);
+      return await this.artRepository.save(updated);
+    } catch (err) {
+      console.error('Update error:', err);
+      throw err;
+    }
+  }
+  
+
+  async remove(artId: string, artistId: string) {
+    const art = await this.artRepository.findOne({
+      where: { id: artId },
+      relations: ['artist'],
+    });
+    if (!art) throw new NotFoundException('Art not found');
+    if (art.artist.id !== artistId)
+      throw new ForbiddenException('Not authorized to delete this art');
+
+    return this.artRepository.remove(art);
   }
 
-  async remove(id: string) {
-    return this.artRepository.delete({id: id});
+  async findByArtist(artistId: string) {
+    return this.artRepository.find({
+      where: { artist: { id: artistId } },
+      relations: ['artist'],
+    });
   }
 }

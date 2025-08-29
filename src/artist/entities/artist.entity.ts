@@ -1,28 +1,23 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  BeforeInsert,
-} from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Art } from 'src/modules/art/entities/art.entity';
 
-@Entity('artists')
-export class Artist {
-  @PrimaryGeneratedColumn()
-  id: number;
+@Entity('artist')
+export class Artist implements User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ type: 'varchar', length: 150, unique: true })
-  uniqueId: string;
+  @Column({ type: 'varchar', unique: true })
+  username: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  joiningDate: Date;
+  @Column({ type: 'varchar', unique: true })
+  email: string;
 
-  @Column({ type: 'varchar', length: 30, default: 'Unknown' })
-  country: string;
+  @Column({ type: 'varchar' })
+  passwordHash: string;
 
-  @BeforeInsert()
-  generateUuid() {
-    this.uniqueId = uuidv4();
-  }
+  @Column({ type: 'text', nullable: true })
+  bio?: string | null;
+
+  @OneToMany(() => Art, art => art.artist)
+  arts: Art[];
 }

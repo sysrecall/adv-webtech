@@ -5,6 +5,7 @@ import { CustomerModule } from 'src/modules/customer/customer.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminModule } from 'src/admin/admin.module';
+import { ArtistModule } from 'src/artist/artist.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { AdminModule } from 'src/admin/admin.module';
       inject: [ConfigService],
     }), 
     forwardRef(() => CustomerModule),
-    forwardRef(() => AdminModule)
+    forwardRef(() => AdminModule),
+    forwardRef(() => ArtistModule)
   ],
   controllers: [AuthController],
   providers: [AuthService],

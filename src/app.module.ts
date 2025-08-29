@@ -20,6 +20,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
+    
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',

@@ -1,27 +1,24 @@
-import { Artist } from "src/artist/entities/artist.entity"
-import {  Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Admin } from "src/admin/entities/admin.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Artist } from 'src/artist/entities/artist.entity';
+import { Admin } from 'src/admin/entities/admin.entity';
+
 @Entity('art')
 export class Art {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-    @Column()
-    title: string;
-    @ManyToOne(() => Artist)
-    artist: Artist;
-    @Column()
-    url: string;
-    @Column({
-        type: 'decimal'
-    })
-    price: number;
-    @Column()
-    subject: string;
-    @Column()
-    style: string;
-    @Column()
-    desc: string;
-    // admin: any;
-    @ManyToOne(() => Admin, admin => admin.art)
-    admin: Admin;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
+  title: string;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string | null;
+
+  @Column({ type: 'decimal' })
+  price: number;
+
+  @ManyToOne(() => Artist, artist => artist.arts, { onDelete: 'CASCADE' })
+  artist: Artist;
+
+  @ManyToOne(() => Admin, admin => admin.art, { nullable: true, onDelete: 'SET NULL' })
+  admin?: Admin | null;
 }

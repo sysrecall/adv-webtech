@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards, Res} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -12,12 +12,18 @@ import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { RequiredRole } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { Art } from 'src/modules/art/entities/art.entity';
+import { Order } from 'src/modules/order/entities/order.entity';
+import { Response } from 'express';
+import { MailerService } from 'src/modules/mailer/mailer.service';
 
 @Controller('admin')
 export class AdminController {
+  // mailerService: any;
   // authService: any;
   constructor(private readonly adminService: AdminService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly mailerService: MailerService
   ) {}
   
 //? Admin registration endpoint with file upload
@@ -54,15 +60,44 @@ export class AdminController {
 
   
 //? Admin SignIn endpoint 
- @Post('signin')
-  async signIn(@Body() AdminSignInDto: AdminSignInDto) {
-    return await this.authService.signIn(AdminSignInDto.username, AdminSignInDto.password, 'admin');
+  @Post('signin')
+  async signIn(
+    @Body() adminSignInDto: AdminSignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // 🔹 Authenticate admin
+    const { access_token } = await this.authService.signIn(
+      adminSignInDto.username,
+      adminSignInDto.password,
+      'admin',
+    );
+
+    // 🔹 Set cookie with JWT
+    res.cookie('Authorization', `Bearer ${access_token}`, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: parseInt(process.env.JWT_EXPIRES_IN ?? '3600000'),
+    });
+
+    // 🔹 Send login notification email
+    await this.mailerService.sendEmail({
+      recipients: [process.env.EMAIL_USER || 'sifat.sai3@gmail.com'], // you can also use adminSignInDto.email if available
+      subject: 'Admin Login Alert',
+      html: `<h3>Hello Admin,</h3>
+             <p>You have successfully signed in at: ${new Date().toLocaleString()}</p>
+             <p>If this wasn’t you, please secure your account immediately.</p>`,
+      text: `You signed in at ${new Date().toLocaleString()}`,
+    });
+
+    // ✅ Response
+    return { message: 'SignIn successful, email sent' };
   }
 
   //? Adminn profile endpoint
   
-@UseGuards(AuthGuard, RolesGuard) // Must be in this order
-@RequiredRole(Role.Admin) // This sets the required role
+@UseGuards(AuthGuard, RolesGuard) 
+@RequiredRole(Role.Admin) 
 @Get('profile')
   async profile(@Request() request) {
     console.log(request.user);
@@ -101,10 +136,10 @@ export class AdminController {
     return this.adminService.findByStatus('inactive');
   }
 
-  // @Get('age/older-than-40')
-  // findOlderThan40() {
-  //   return this.adminService.findOlderThan40();
-  // }
+  @Get('age/older-than-40')
+  findOlderThan40() {
+    return this.adminService.findOlderThan40();
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
@@ -116,29 +151,14 @@ export class AdminController {
   }
 
 
-    //? Routes for Admin-Customer relationship (OneToMany)
 
-  // @Post(':id/add-customer/:customerId')
-  // // @UseGuards(JwtAuthGuard)
-  // addCustomer(@Param('id') id: string, @Param('customerId') customerId: string) {
-  //   return this.adminService.addCustomer(+id, +customerId);
-  // }
 
-  // @Delete(':id/remove-customer/:customerId')
-  // // @UseGuards(JwtAuthGuard)
-  // removeCustomer(@Param('id') id: string, @Param('customerId') customerId: string) {
-  //   return this.adminService.removeCustomer(+id, +customerId);
-  // }
+    //? ---------------- CUSTOMER CRUD  ----------------
 
-  // @Get(':id/customers')
-  // // @UseGuards(JwtAuthGuard)
-  // getCustomers(@Param('id') id: string) {
-  //   return this.adminService.getCustomers(+id);
-  // }
-  @Post(':id/customers')
+@Post(':id/customers')
 createCustomer(
   @Param('id') id: string,
-  @Body() customerData: Partial<Customer>,  // Create a DTO if needed
+  @Body() customerData: Customer, 
 ) {
   return this.adminService.createCustomer(+id, customerData);
 }
@@ -147,7 +167,7 @@ createCustomer(
 updateCustomer(
   @Param('id') id: string,
   @Param('customerId') customerId: string,
-  @Body() updateData: Partial<Customer>,
+  @Body() updateData: Customer, 
 ) {
   return this.adminService.updateCustomer(+id, customerId, updateData);
 }
@@ -159,5 +179,37 @@ removeCustomerById(
 ) {
   return this.adminService.removeCustomerById(+id, customerId);
 }
+
+// ---------------- ART CRUD ----------------
+  // @Post(':id/art')
+  // createArt(@Param('id') id: string, @Body() data: Partial<Art>) {
+  //   return this.adminService.createArt(id, data);
+  // }
+
+  // @Get(':id/art')
+  // getAllArt(@Param('id') id: string) {
+  //   return this.adminService.getAllArt(id);
+  // }
+
+  // @Patch(':id/arts/:artId')
+  // updateArt(@Param('id') id: string, @Param('artId') artId: string, @Body() data: Partial<Art>) {
+  //   return this.adminService.updateArt(id, artId, data);
+  // }
+
+  // @Delete(':id/arts/:artId')
+  // deleteArt(@Param('id') id: string, @Param('artId') artId: string) {
+  //   return this.adminService.deleteArt(id, artId);
+  // }
+
+  // ---------------- ORDER UPDATE + DELETE ----------------
+  @Patch(':id/orders/:orderId')
+  updateOrder(@Param('id') id: string, @Param('orderId') orderId: string, @Body() data: Partial<Order>) {
+    return this.adminService.updateOrder(id, orderId, data);
+  }
+
+  @Delete(':id/orders/:orderId')
+  deleteOrder(@Param('id') id: string, @Param('orderId') orderId: string) {
+    return this.adminService.deleteOrder(id, orderId);
+  }
 
 }

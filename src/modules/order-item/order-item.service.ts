@@ -16,7 +16,7 @@ export class OrderItemService {
 
   }
   async create(createOrderItemDto: CreateOrderItemDto) {
-    const artist = await this.artistRepository.findOneBy({id: +createOrderItemDto.artistId});
+    const artist = await this.artistRepository.findOneBy({id: createOrderItemDto.artistId});
     if (!artist) throw new PreconditionFailedException("Invalid artist id.");
 
     const {artistId, ..._orderItem} = createOrderItemDto;
