@@ -1,5 +1,5 @@
 // Correct the import path
-import Layout from "./Admin/Components/Layout";
+import Layout from "./admin/Components/Layout";
 export default function HomePage() {
   return (
     <Layout> {}
