@@ -1,23 +1,15 @@
 
-import type { Metadata } from "next";
-// import "./globals.css";
+import Navbar from "./Components/Navbar";
 
-export const metadata: Metadata = {
-  title: "Online Art Store",
-  description: "Buy and sell beautiful artworks online",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <div>
+      <Navbar />
+      <main>{children}</main>
+    </div>
   );
 }
+
 // export default function Layout({
 //   children,
 // }: Readonly<{

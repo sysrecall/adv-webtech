@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function Register() {
   return (
     <>
@@ -32,6 +33,9 @@ export default function Register() {
         <br />
         <button type="submit">Register</button>
       </form>
+            <br /> 
+        <Link href="../admin">Home</Link>
+        <br />
     </>
   );
 }

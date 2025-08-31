@@ -5,7 +5,9 @@ export default function HomePage() {
   return (
     <> 
 
-       <div><em>Admin Panel </em></div>
+       <div>Admin Panel </div>
+            <br />
+            <br />
             <Link href='admin/login'>Login </Link>
             <br />
             <Link href='admin/register'>Register</Link>
