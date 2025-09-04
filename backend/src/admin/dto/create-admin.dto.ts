@@ -3,10 +3,10 @@ import { IsString, IsEmail, IsIn, IsNotEmpty, IsNumberString, Matches, MinLength
 
 
 export class CreateAdminDto {
-  @IsInt()
-  @Transform(({ value }) => parseInt(value, 10))
-  @Min(0)
-  id: number;
+  // @IsInt()
+  // @Transform(({ value }) => parseInt(value, 10))
+  // @Min(0)
+  // id: number;
 
   @IsString()
   @Matches(/^[A-Za-z\s]+$/, {

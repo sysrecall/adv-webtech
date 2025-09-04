@@ -52,25 +52,27 @@ export default function AdminRegister() {
     };
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setMessage("File size exceeds 5MB!");
-        setNidImage(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-      if (!file.type.startsWith("image/")) {
-        setMessage("Please upload an image file!");
-        setNidImage(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-      setNidImage(file);
-      setMessage("");
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    // Use 2MB limit
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage("File size exceeds 2MB!");
+      setNidImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
     }
-  };
+    if (!file.type.startsWith("image/")) {
+      setMessage("Please upload an image file!");
+      setNidImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setNidImage(file);
+    setMessage("");
+  }
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
