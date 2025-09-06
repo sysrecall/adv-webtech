@@ -38,12 +38,12 @@ export class CustomerController {
     }) 
   }))
   @UsePipes(new ValidationPipe())
-  async create(@Body() createCustomerDto: CreateCustomerDto, @UploadedFile() photo: Express.Multer.File) {
+  async create(@Body() createCustomerDto: CreateCustomerDto, @UploadedFile() photo: Express.Multer.File, @Res() res) {
     const profilePhotoPath = photo ? photo.filename : null;
-    return await this.customerService.create(createCustomerDto, profilePhotoPath);
+    await this.customerService.create(createCustomerDto, profilePhotoPath);
+    return res.status(HttpStatus.CREATED).send();
   }
 
-  @HttpCode(HttpStatus.OK)
   @Post('signin')
   async signIn(@Body() signInCustomerDto: SignInCustomerDto, @Res({passthrough: true}) res) {
     const { access_token } = await this.authService.signIn(signInCustomerDto.username, signInCustomerDto.password, 'customer');
@@ -54,7 +54,7 @@ export class CustomerController {
         sameSite: 'strict',
         maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
     });
-    res.send();
+    res.status(HttpStatus.OK).send();
   }
 
 

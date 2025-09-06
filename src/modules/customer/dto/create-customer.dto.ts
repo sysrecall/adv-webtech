@@ -14,10 +14,6 @@ export class CreateCustomerDto {
     email: string;
     @IsString()
     fullName: string;
-    @IsString()
-    billingAddress: string;
-    @IsString()
-    shippingAddress: string;
     @IsNumberString()
     phone: string;
     @Transform(({ value }) => value.toLowerCase())
