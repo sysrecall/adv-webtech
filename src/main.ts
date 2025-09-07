@@ -8,7 +8,12 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
-
+ app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:8000', // ✅ Your Next.js URL
+    credentials: true, // ✅ Allow cookies
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization', // ✅ Include Authorization + JSON
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
