@@ -19,6 +19,17 @@ export class Art {
   @ManyToOne(() => Artist, artist => artist.arts, { onDelete: 'CASCADE' })
   artist: Artist;
 
+  @Column({ type: 'text', nullable: true })
+  _imageUrls?: string | null; 
+
+  get imageUrls(): string[] {
+    return this._imageUrls ? JSON.parse(this._imageUrls) : [];
+  }
+
+  set imageUrls(urls: string[]) {
+    this._imageUrls = JSON.stringify(urls);
+  }
+
   @ManyToOne(() => Admin, admin => admin.art, { nullable: true, onDelete: 'SET NULL' })
   admin?: Admin | null;
 }
