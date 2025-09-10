@@ -10,6 +10,9 @@ export class Art {
   @Column({ type: 'varchar' })
   title: string;
 
+  @Column({ type: 'varchar' })
+  style: string;
+
   @Column({ type: 'text', nullable: true })
   description?: string | null;
 
@@ -20,15 +23,8 @@ export class Art {
   artist: Artist;
 
   @Column({ type: 'text', nullable: true })
-  _imageUrls?: string | null; 
+  imageUrl: string | null; 
 
-  get imageUrls(): string[] {
-    return this._imageUrls ? JSON.parse(this._imageUrls) : [];
-  }
-
-  set imageUrls(urls: string[]) {
-    this._imageUrls = JSON.stringify(urls);
-  }
 
   @ManyToOne(() => Admin, admin => admin.art, { nullable: true, onDelete: 'SET NULL' })
   admin?: Admin | null;

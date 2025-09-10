@@ -6,22 +6,33 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { Art } from './entities/art.entity';
 
-@Controller()
+@Controller("art")
 export class ArtController {
   constructor(private readonly artService: ArtService) {}
 
+  @Get("seed")
+  async seed() {
+    return await this.artService.seed();
+  }
+
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Artist)
-  @Post('art')
+  @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async create(@Req() req, @Body() dto: CreateArtDto) {
     return this.artService.create(req.user.id, dto);
   }
 
-  @Get('art')
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.artService.findOne(id);
+  }
+
+  @Get()
   async findAll() {
-    return this.artService.findAll();
+    return await this.artService.findAll();
   }
 
   @Get('artist/:id/art')
@@ -31,17 +42,15 @@ export class ArtController {
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Artist)
-  @Patch('art/:id')
+  @Patch(':id')
   async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateArtDto) {
     return this.artService.update(id, req.user.id, dto);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Artist)
-  @Delete('art/:id')
+  @Delete(':id')
   async remove(@Param('id') id: string, @Req() req) {
     return this.artService.remove(id, req.user.id);
   }
-
-
 }

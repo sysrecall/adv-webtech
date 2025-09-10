@@ -20,7 +20,18 @@ export class ArtService {
   ) {}
 
   async seed() {
-    
+    const artistId = "ca5013ca-cc12-443c-bfc2-6306f32b3962";
+    const artist = await this.artistService.findOne(artistId);
+    data.forEach(d => {
+      if (!artist) throw new NotFoundException('Artist not found');
+
+      const art = this.artRepository.create({
+        ...d,
+        artist,
+      });
+      return this.artRepository.save(art);
+      
+    })
   }
 
   async create(artistId: string, dto: CreateArtDto) {
