@@ -77,24 +77,19 @@ findOne(id: number) {
 
 async findOneByUsername(username: string) {
   const admin = await this.adminRepository.findOne({
-    where: { username },
-    select: {
-      id: true,
-      username: true,
-      password: true, 
-      fullName: true,
-      email: true,
-      status: true,
-    },
-  });
+  where: { username },
+  relations: ['customers', 'orders', 'art'], // include related entities
+});
+
 
   if (!admin) return null;
 
   return {
     ...admin,
-    passwordHash: admin.password, // Critical fix
+    passwordHash: admin.password,
   };
 }
+
 //? For auth signin with password
 async findOneWithPassword(id: number) {
   return this.adminRepository.findOne({
