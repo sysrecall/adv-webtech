@@ -9,7 +9,7 @@ import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Request } from '@nestjs/common';
 import { Role } from 'src/common/enums/role.enum';
-import { RequiredRole } from 'src/common/decorators/role.decorator';
+import { Roles } from 'src/common/decorators/role.decorator';
 
 @Controller('customer')
 export class CustomerController {
@@ -68,7 +68,7 @@ export class CustomerController {
     return userWithoutPassHash;
   }
 
-  @RequiredRole(Role.Customer)
+  @Roles(Role.Customer)
   @Get('testRoute')
   async testRoute() {
     return true;

@@ -8,21 +8,23 @@ import { Repository } from 'typeorm';
 import { Art } from './entities/art.entity';
 import { CreateArtDto } from './dto/create-art.dto';
 import { UpdateArtDto } from './dto/update-art.dto';
-import { Artist } from 'src/artist/entities/artist.entity';
+import { ArtistService } from 'src/artist/artist.service';
+import {data} from '../art/seed/seed';
 
 @Injectable()
 export class ArtService {
   constructor(
     @InjectRepository(Art)
     private readonly artRepository: Repository<Art>,
-    @InjectRepository(Artist)
-    private readonly artistRepository: Repository<Artist>,
+    private readonly artistService: ArtistService
   ) {}
 
+  async seed() {
+    
+  }
+
   async create(artistId: string, dto: CreateArtDto) {
-    const artist = await this.artistRepository.findOne({
-      where: { id: artistId },
-    });
+    const artist = await this.artistService.findOne(artistId);
     if (!artist) throw new NotFoundException('Artist not found');
 
     const art = this.artRepository.create({
