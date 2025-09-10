@@ -4,7 +4,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, MulterError } from 'multer';
-import { SignInCustomerDto } from './dto/signin-customer.dto';
+import { LoginCustomerDto } from './dto/login-customer.dto';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Request } from '@nestjs/common';
@@ -44,14 +44,14 @@ export class CustomerController {
     return res.status(HttpStatus.CREATED).send();
   }
 
-  @Post('signin')
-  async signIn(@Body() signInCustomerDto: SignInCustomerDto, @Res({passthrough: true}) res) {
-    const { access_token } = await this.authService.signIn(signInCustomerDto.username, signInCustomerDto.password, 'customer');
+  @Post('login')
+  async login(@Body() loginCustomerDto: LoginCustomerDto, @Res({passthrough: true}) res) {
+    const { access_token } = await this.authService.signIn(loginCustomerDto.username, loginCustomerDto.password, 'customer');
     
     res.cookie('Authorization', `Bearer ${access_token}`, {
         httpOnly: true,
         secure: true,
-        sameSite: 'strict',
+        sameSite: 'None',
         maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
     });
     res.status(HttpStatus.OK).send();

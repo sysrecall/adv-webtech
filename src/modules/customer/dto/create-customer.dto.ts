@@ -16,7 +16,7 @@ export class CreateCustomerDto {
     fullName: string;
     @IsNumberString()
     phone: string;
-    @Transform(({ value }) => value.toLowerCase())
-    @IsIn(['male', 'female'])
-    gender: string;
+    // @Transform(({ value }) => value.toLowerCase())
+    // @IsIn(['male', 'female'])
+    // gender: string;
 }
