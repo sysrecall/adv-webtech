@@ -10,8 +10,8 @@ import { Request } from '@nestjs/common';
 import { AdminSignInDto } from './dto/admin-signin.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { Roles } from 'src/common/decorators/role.decorator';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { Response } from 'express';
@@ -97,7 +97,7 @@ export class AdminController {
   //? Adminn profile endpoint
   
 @UseGuards(AuthGuard, RolesGuard) 
-@Roles(Role.Admin) 
+@Roles(Role.Admin)
 @Get('profile')
   async profile(@Request() request) {
     console.log(request.user);
@@ -124,10 +124,12 @@ findOne(@Param('id', ParseIntPipe) id: number) {
 
 //? update Admin by status
 
-@Patch(':id')
-async update(@Param('id', ParseIntPipe) id: number, @Body() updateAdminDto: UpdateAdminDto) {
-  return this.adminService.update(id, updateAdminDto);
-}
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body('status') status: 'active' | 'inactive') {
+    return this.adminService.updateStatus(+id, status);
+
+  }
+
 //? Get Admin by status
 
   @Get('status/inactive')
