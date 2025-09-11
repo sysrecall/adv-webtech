@@ -8,7 +8,7 @@ import { Customer } from 'src/modules/customer/entities/customer.entity';
 import * as bcrypt from 'bcrypt';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
-
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class AdminService {
   artRepo: any;
@@ -22,7 +22,8 @@ export class AdminService {
     @InjectRepository(Art)
      private readonly artRepository: Repository<Art>,
     @InjectRepository(Order)
-     private readonly orderRepository: Repository<Order>
+     private readonly orderRepository: Repository<Order>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
 
@@ -176,7 +177,6 @@ async updateStatus(id: number, status: 'active' | 'inactive') {
   //? ---------------- CUSTOMER CRUD  ----------------
 
 async createCustomer(adminId: number, customerData: Partial<Customer>) {
-    console.log('Creating customer with data:', customerData);
     const admin = await this.findOne(adminId);
     if (!admin) throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
 
@@ -186,15 +186,31 @@ async createCustomer(adminId: number, customerData: Partial<Customer>) {
       passwordHash: customerData.passwordHash || await bcrypt.hash('defaultPassword123', 10), // Example hash
       admin,
     };
-
     try {
       const customer = this.customerRepository.create(customerDataWithPassword);
       const savedCustomer = await this.customerRepository.save(customer);
+
+      // Try sending notification, but don't block customer creation
+      try {
+        console.log(" Sending Pusher event for customer:", savedCustomer.fullName);
+          await this.notificationsService.sendNotification(
+            'admin-channel',
+            'customer-created',
+            { message: `Customer ${savedCustomer.fullName} created`, adminId }
+          );
+          console.log("Pusher payload:", { message: `Customer ${savedCustomer.fullName} created`, adminId });
+          console.log(" Event sent to Pusher");
+
+      } catch (notifyErr) {
+        console.error("Pusher notification failed:", notifyErr.message);
+      }
+
       return savedCustomer;
     } catch (error) {
-      throw new HttpException('Failed to create customer', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error("Create customer error:", error);
+      throw new HttpException(error.message || 'Failed to create customer', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  }
+}
 async updateCustomer(adminId: number, customerId: string, updateData: Partial<Customer>) {
   const customer = await this.customerRepository.findOne({
     where: { id: customerId, admin: { id: adminId } },

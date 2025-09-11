@@ -15,6 +15,7 @@ import { Roles } from 'src/common/decorators/role.decorator';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { Response } from 'express';
+import { CreateCustomerDto } from 'src/modules/customer/dto/create-customer.dto';
 // import { MailerService } from '@nestjs-modules/mailer';
 
 @Controller('admin')
@@ -82,7 +83,7 @@ export class AdminController {
     //   text: `You signed in at ${new Date().toLocaleString()}`,
     // });
 
-    // ✅ Response
+
     return { message: 'SignIn successful, email sent' };
   }
 
@@ -157,7 +158,7 @@ findOne(@Param('id', ParseIntPipe) id: number) {
 @Post(':id/customers')
 createCustomer(
   @Param('id') id: string,
-  @Body() customerData: Customer, 
+  @Body() customerData: Customer | CreateCustomerDto, 
 ) {
   return this.adminService.createCustomer(+id, customerData);
 }
