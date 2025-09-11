@@ -124,12 +124,10 @@ findOne(@Param('id', ParseIntPipe) id: number) {
 
 //? update Admin by status
 
-  @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body('status') status: 'active' | 'inactive') {
-    return this.adminService.updateStatus(+id, status);
-
-  }
-
+@Patch(':id')
+async update(@Param('id', ParseIntPipe) id: number, @Body() updateAdminDto: UpdateAdminDto) {
+  return this.adminService.update(id, updateAdminDto);
+}
 //? Get Admin by status
 
   @Get('status/inactive')
