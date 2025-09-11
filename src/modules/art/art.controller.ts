@@ -35,6 +35,11 @@ export class ArtController {
     return await this.artService.findAll();
   }
 
+  @Get('similar/style/:style')
+  async similar(@Param('style') style: string) {
+    return await this.artService.similar(style);
+  }
+
   @Get('artist/:id/art')
   async findByArtist(@Param('id') id: string) {
     return this.artService.findByArtist(id);

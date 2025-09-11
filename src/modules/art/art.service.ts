@@ -9,7 +9,7 @@ import { Art } from './entities/art.entity';
 import { CreateArtDto } from './dto/create-art.dto';
 import { UpdateArtDto } from './dto/update-art.dto';
 import { ArtistService } from 'src/artist/artist.service';
-import {data} from '../art/seed/seed';
+import { data } from '../art/seed/seed';
 
 @Injectable()
 export class ArtService {
@@ -17,7 +17,7 @@ export class ArtService {
     @InjectRepository(Art)
     private readonly artRepository: Repository<Art>,
     private readonly artistService: ArtistService
-  ) {}
+  ) { }
 
   async seed() {
     const artistId = "ca5013ca-cc12-443c-bfc2-6306f32b3962";
@@ -30,7 +30,7 @@ export class ArtService {
         artist,
       });
       return this.artRepository.save(art);
-      
+
     })
   }
 
@@ -43,6 +43,16 @@ export class ArtService {
       artist,
     });
     return this.artRepository.save(art);
+  }
+
+  async similar(style: string) {
+    return this.artRepository.find({
+      take: 4,
+      where: {
+        style: style
+      },
+      relations: ['artist']
+    });
   }
 
   async findAll() {
@@ -68,14 +78,14 @@ export class ArtService {
         where: { id: artId },
         relations: ['artist'],
       });
-  
+
       if (!art) throw new NotFoundException('Art not found');
-  
+
       if (String(art.artist.id) !== String(artistId)) {
         throw new ForbiddenException('Not authorized to update this art');
       }
-      
-  
+
+
       const updated = this.artRepository.merge(art, dto);
       return await this.artRepository.save(updated);
     } catch (err) {
@@ -83,7 +93,7 @@ export class ArtService {
       throw err;
     }
   }
-  
+
 
   async remove(artId: string, artistId: string) {
     const art = await this.artRepository.findOne({
