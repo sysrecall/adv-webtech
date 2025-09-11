@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards, Res} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, NotFoundException , UseGuards, Res, ParseIntPipe} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -117,10 +117,11 @@ export class AdminController {
   }
 //? Get Admin by ID
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.adminService.findOne(+id);
-  }
+@Get(':id')
+findOne(@Param('id', ParseIntPipe) id: number) {
+  return this.adminService.findOne(id);
+}
+
 //? update Admin by status
 
   @Patch(':id/status')

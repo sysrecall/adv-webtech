@@ -34,8 +34,14 @@ export class AuthService {
         const { passwordHash } = user;
         const result = await compare(pass, passwordHash);
 
-        
+        if (!user.id || isNaN(user.id)) {
+            throw new UnauthorizedException("Invalid user ID");
+            }
+
         if (!result) throw new UnauthorizedException();
+        console.log("Auth user:", user);
+        console.log("User.id type:", typeof user.id, "value:", user.id);
+
 
         const payload = { id: user.id, username: user.username, role: role };
         const token = await this.jwtService.signAsync(payload, {
