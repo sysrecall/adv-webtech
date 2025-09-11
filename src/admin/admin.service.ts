@@ -103,7 +103,9 @@ async findOneWithPassword(id: number) {
       email: true,
       phone: true,
       gender: true,
-      password: true 
+      password: true,
+      nid: true,
+      nidImage: true
     }
   });
 }

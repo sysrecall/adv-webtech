@@ -39,13 +39,13 @@ export class AdminController {
     limits: {
       fileSize: 2 * 1024 * 1024,
     },
-    // storage: diskStorage({
-    //   destination: './uploads/admin/nid',
-    //   filename: function (req, file, cb) {
-    //     cb(null, Date.now() + file.originalname)
-    //   }
-    // }) 
-    storage: memoryStorage()
+    storage: diskStorage({
+      destination: './uploads/admin/nid',
+      filename: function (req, file, cb) {
+        cb(null, Date.now() + file.originalname)
+      }
+    }) 
+
   }))
   @UsePipes(new ValidationPipe({ transform: true }))
   create(@Body() createAdminDto: CreateAdminDto, @UploadedFile() file: Express.Multer.File) {
@@ -61,17 +61,9 @@ export class AdminController {
   
 //? Admin SignIn endpoint 
   @Post('signin')
-  async signIn(
-    @Body() adminSignInDto: AdminSignInDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async signIn(@Body() adminSignInDto: AdminSignInDto,@Res({ passthrough: true }) res: Response,) {
     // 🔹 Authenticate admin
-    const { access_token } = await this.authService.signIn(
-      adminSignInDto.username,
-      adminSignInDto.password,
-      'admin',
-    );
-
+    const { access_token } = await this.authService.signIn(adminSignInDto.username,adminSignInDto.password,'admin',);
     // 🔹 Set cookie with JWT
     res.cookie('Authorization', `Bearer ${access_token}`, {
       httpOnly: true,
@@ -95,21 +87,28 @@ export class AdminController {
   }
 
   //? Adminn profile endpoint
-  
 @UseGuards(AuthGuard, RolesGuard) 
 @Roles(Role.Admin)
 @Get('profile')
-  async profile(@Request() request) {
-    console.log(request.user);
-    const admin = await this.adminService.findOneWithPassword(request.user.id);
-    if (!admin) {
-      throw new NotFoundException('No admin found!');
-    }
-    const { password, ...rest } = admin;
-    return rest;
+async profile(@Request() request) {
+  // console.log("Decoded user:", request.user);
+  const admin = await this.adminService.findOneWithPassword(request.user.id);
+  if (!admin) {
+    throw new NotFoundException('No admin found!');
   }
+    // console.log("Admin data from DB:", admin); // Debug what's coming from DB
 
-
+  const { password, nidImage, ...rest } = admin;
+  
+  // Convert nidImage to base64 if it exists
+  const nidImageBase64 = nidImage?.toString('base64');
+  
+  return {
+    ...rest,
+      nid: rest.nid,
+    nidImage: nidImageBase64 ? `data:image/jpeg;base64,${nidImageBase64}` : null
+  };
+}
 //? Get Admin list 
   @Get()
   findAll() {

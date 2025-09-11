@@ -39,8 +39,8 @@ export class AuthService {
             }
 
         if (!result) throw new UnauthorizedException();
-        console.log("Auth user:", user);
-        console.log("User.id type:", typeof user.id, "value:", user.id);
+        // console.log("Auth user:", user);
+        // console.log("User.id type:", typeof user.id, "value:", user.id);
 
 
         const payload = { id: user.id, username: user.username, role: role };
