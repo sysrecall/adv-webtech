@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, HttpException } from '@nestjs/common';
+import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsSelect, MoreThan, Repository } from 'typeorm';
 import { Admin } from './entities/admin.entity';
@@ -78,7 +78,7 @@ findOne(id: number) {
 async findOneByUsername(username: string) {
   const admin = await this.adminRepository.findOne({
   where: { username },
-  relations: ['customers', 'orders', 'art'], // include related entities
+  relations: ['customers', 'orders', 'art'],
 });
 
 
@@ -176,17 +176,25 @@ async updateStatus(id: number, status: 'active' | 'inactive') {
   //? ---------------- CUSTOMER CRUD  ----------------
 
 async createCustomer(adminId: number, customerData: Partial<Customer>) {
-  const admin = await this.findOne(adminId);
-  if (!admin) throw new HttpException('Admin not found', 404);
+    console.log('Creating customer with data:', customerData);
+    const admin = await this.findOne(adminId);
+    if (!admin) throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
 
-  const customer = this.customerRepository.create({
-    ...customerData,
-    admin,
-  });
+    // If passwordHash is required but not provided, generate a placeholder
+    const customerDataWithPassword = {
+      ...customerData,
+      passwordHash: customerData.passwordHash || await bcrypt.hash('defaultPassword123', 10), // Example hash
+      admin,
+    };
 
-  return this.customerRepository.save(customer);
-}
-
+    try {
+      const customer = this.customerRepository.create(customerDataWithPassword);
+      const savedCustomer = await this.customerRepository.save(customer);
+      return savedCustomer;
+    } catch (error) {
+      throw new HttpException('Failed to create customer', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 async updateCustomer(adminId: number, customerId: string, updateData: Partial<Customer>) {
   const customer = await this.customerRepository.findOne({
     where: { id: customerId, admin: { id: adminId } },
@@ -209,7 +217,15 @@ async removeCustomerById(adminId: number, customerId: string) {
 
   return this.customerRepository.remove(customer);
 }
+async getCustomers(adminId: number) {
+  const admin = await this.findOne(adminId);
+  if (!admin) throw new HttpException('Admin not found', 404);
 
+  return this.customerRepository.find({
+    where: { admin: { id: adminId } },
+    relations: ['admin'],
+  });
+}
 // ---------------- ART CRUD ----------------
 // async createArt(adminId: string, data: Partial<Art>) {
 //   const admin = await this.findOne(+adminId);

@@ -100,7 +100,6 @@ async profile(@Request() request) {
 
   const { password, nidImage, ...rest } = admin;
   
-  // Convert nidImage to base64 if it exists
   const nidImageBase64 = nidImage?.toString('base64');
   
   return {
@@ -179,7 +178,10 @@ removeCustomerById(
 ) {
   return this.adminService.removeCustomerById(+id, customerId);
 }
-
+@Get(':id/customers')
+getCustomers(@Param('id') id: string) {
+  return this.adminService.getCustomers(+id);
+}
 // ---------------- ART CRUD ----------------
   // @Post(':id/art')
   // createArt(@Param('id') id: string, @Body() data: Partial<Art>) {
