@@ -10,6 +10,9 @@ export class Art {
   @Column({ type: 'varchar' })
   title: string;
 
+  @Column({ type: 'varchar' })
+  style: string;
+
   @Column({ type: 'text', nullable: true })
   description?: string | null;
 
@@ -18,6 +21,10 @@ export class Art {
 
   @ManyToOne(() => Artist, artist => artist.arts, { onDelete: 'CASCADE' })
   artist: Artist;
+
+  @Column({ type: 'text', nullable: true })
+  imageUrl: string | null; 
+
 
   @ManyToOne(() => Admin, admin => admin.art, { nullable: true, onDelete: 'SET NULL' })
   admin?: Admin | null;

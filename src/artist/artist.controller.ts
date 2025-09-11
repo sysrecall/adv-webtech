@@ -7,7 +7,7 @@ import { AuthService } from 'src/modules/auth/auth.service';
 import { Response } from 'express';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { RequiredRole } from 'src/common/decorators/role.decorator';
+import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
 
 @Controller('artist')
@@ -57,7 +57,7 @@ export class ArtistController {
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @RequiredRole(Role.Artist)
+  @Roles(Role.Artist)
   @Put(':id')
   async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateArtistDto) {
     if (String(req.user.id) !== String(id)) throw new UnauthorizedException('Not authorized to update this artist');
@@ -65,7 +65,7 @@ export class ArtistController {
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @RequiredRole(Role.Artist)
+  @Roles(Role.Artist)
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req) {
     if (String(req.user.id) !== String(id)) throw new UnauthorizedException('Not authorized to delete this artist');

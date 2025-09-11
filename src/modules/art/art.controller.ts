@@ -4,24 +4,40 @@ import { CreateArtDto } from './dto/create-art.dto';
 import { UpdateArtDto } from './dto/update-art.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { RequiredRole } from 'src/common/decorators/role.decorator';
+import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { Art } from './entities/art.entity';
 
-@Controller()
+@Controller("art")
 export class ArtController {
   constructor(private readonly artService: ArtService) {}
 
+  @Get("seed")
+  async seed() {
+    return await this.artService.seed();
+  }
+
   @UseGuards(AuthGuard, RolesGuard)
-  @RequiredRole(Role.Artist)
-  @Post('art')
+  @Roles(Role.Admin, Role.Artist)
+  @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async create(@Req() req, @Body() dto: CreateArtDto) {
     return this.artService.create(req.user.id, dto);
   }
 
-  @Get('art')
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.artService.findOne(id);
+  }
+
+  @Get()
   async findAll() {
-    return this.artService.findAll();
+    return await this.artService.findAll();
+  }
+
+  @Get('similar/style/:style')
+  async similar(@Param('style') style: string) {
+    return await this.artService.similar(style);
   }
 
   @Get('artist/:id/art')
@@ -30,15 +46,15 @@ export class ArtController {
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @RequiredRole(Role.Artist)
-  @Patch('art/:id')
+  @Roles(Role.Admin, Role.Artist)
+  @Patch(':id')
   async update(@Param('id') id: string, @Req() req, @Body() dto: UpdateArtDto) {
     return this.artService.update(id, req.user.id, dto);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @RequiredRole(Role.Artist)
-  @Delete('art/:id')
+  @Roles(Role.Admin, Role.Artist)
+  @Delete(':id')
   async remove(@Param('id') id: string, @Req() req) {
     return this.artService.remove(id, req.user.id);
   }

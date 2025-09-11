@@ -13,6 +13,8 @@ import { OrderItemModule } from './modules/order-item/order-item.module';
 import { OrderModule } from './modules/order/order.module';
 import { CartItemModule } from './modules/cart-item/cart-item.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
-    
+
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -30,25 +32,29 @@ import { MailerModule } from '@nestjs-modules/mailer';
       database: 'art_store',
       autoLoadEntities: true,
       synchronize: true
-  }),
-  MailerModule.forRoot({
-    transport: {
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT ?? '587'),
-      ignoreTLS: false,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      }
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT ?? '587'),
+        ignoreTLS: false,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD
+        }
 
-    }
-  }),
+      }
+    }),
     AuthModule, AdminModule, ArtistModule, CustomerModule,
     ArtModule, CartModule, OrderItemModule, OrderModule, CartItemModule,
-],
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '../'),
+      renderPath: 'uploads'
+    }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
 
-export class AppModule {}
+export class AppModule { }
