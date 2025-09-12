@@ -40,12 +40,7 @@ export class AdminController {
     limits: {
       fileSize: 2 * 1024 * 1024,
     },
-    storage: diskStorage({
-      destination: './uploads/admin/nid',
-      filename: function (req, file, cb) {
-        cb(null, Date.now() + file.originalname)
-      }
-    }) 
+    storage: memoryStorage() // Store files in memory as Buffer (for small files like images
 
   }))
   @UsePipes(new ValidationPipe({ transform: true }))
