@@ -38,11 +38,7 @@ export class Customer implements User {
         nullable: true,
     })
     gender: string;
-    @Column({
-        type: 'bool',
-        default: false,
-    })
-    isActive: boolean;
+    
     @Column({
         type: 'varchar',
         nullable: true,
