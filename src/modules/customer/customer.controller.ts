@@ -9,6 +9,7 @@ import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Request } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ChangePasswordCustomer } from './dto/change-password-customer.dto';
 
 @Controller('customer')
 export class CustomerController {
@@ -103,73 +104,91 @@ export class CustomerController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res) {
-    res.cookie('Authorization','');
+    res.cookie('Authorization', '');
     return { status: HttpStatus.OK, message: 'Logged out successfully' };
     // res.cookies.Authorization = null;
     // return res.send();
   }
 
-@UseGuards(AuthGuard)
-@Get('profile')
-async profile(@Request() request) {
-  const user = await this.customerService.findOne(request.user.id);
-  if (!user) { throw new UnauthorizedException('Not authorized to perform this action!'); }
-  const { passwordHash, ...userWithoutPassHash } = user;
+  @Patch('change-password')
+  async changePassword(@Body() changePasswordCustomer: ChangePasswordCustomer, @Req() req) {
+    const token = this.extractTokenFromCookie(req);
+    if (!token) { throw new UnauthorizedException('No token provided!'); }
 
-  return userWithoutPassHash;
-}
-
-@Get()
-async findOneWithCookie(@Req() req) {
-  const token = this.extractTokenFromCookie(req);
-  if (!token) { throw new UnauthorizedException('No token provided!'); }
-
-  try {
-    const user = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
-    return await this.customerService.findOne(user.id);
-  } catch (e) {
-    throw e;
+    try {
+      const user = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
+      console.log(user);
+      await this.customerService.changePassword(
+        user.id, 
+        changePasswordCustomer.password, 
+        changePasswordCustomer.newPassword
+      );
+    } catch (e) {
+      throw e;
+    }
   }
-}
 
-@Get('all')
-async findAll() {
-  return await this.customerService.findAll();
-}
+  @UseGuards(AuthGuard)
+  @Get('profile')
+  async profile(@Request() request) {
+    const user = await this.customerService.findOne(request.user.id);
+    if (!user) { throw new UnauthorizedException('Not authorized to perform this action!'); }
+    const { passwordHash, ...userWithoutPassHash } = user;
 
-@Get('photo/:name')
-async getProfilePhoto(@Param('name') name: string, @Res() res) {
-  res.sendFile(name, { root: './uploads/customer/profile-photos' })
-}
+    return userWithoutPassHash;
+  }
 
-@Get('id/:id')
-async findOne(@Param('id') id: string) {
-  return await this.customerService.findOne(id);
-}
+  @Get()
+  async findOneWithCookie(@Req() req) {
+    const token = this.extractTokenFromCookie(req);
+    if (!token) { throw new UnauthorizedException('No token provided!'); }
 
-@Get('find')
-async filterByName(@Query('fullName') fullName: string) {
-  return await this.customerService.filterByName(fullName);
-}
+    try {
+      const user = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
+      return await this.customerService.findOne(user.id);
+    } catch (e) {
+      throw e;
+    }
+  }
 
-@Get('username/:username')
-async username(@Param('username') username: string) {
-  return await this.customerService.findOneByUsername(username);
-}
+  @Get('all')
+  async findAll() {
+    return await this.customerService.findAll();
+  }
 
-@Delete('username/:username')
-async removeOneByUsername(@Param('username') username: string) {
-  return await this.customerService.removeOneByUsername(username);
-}
+  @Get('photo/:name')
+  async getProfilePhoto(@Param('name') name: string, @Res() res) {
+    res.sendFile(name, { root: './uploads/customer/profile-photos' })
+  }
+
+  @Get('id/:id')
+  async findOne(@Param('id') id: string) {
+    return await this.customerService.findOne(id);
+  }
+
+  @Get('find')
+  async filterByName(@Query('fullName') fullName: string) {
+    return await this.customerService.filterByName(fullName);
+  }
+
+  @Get('username/:username')
+  async username(@Param('username') username: string) {
+    return await this.customerService.findOneByUsername(username);
+  }
+
+  @Delete('username/:username')
+  async removeOneByUsername(@Param('username') username: string) {
+    return await this.customerService.removeOneByUsername(username);
+  }
 
 
-// @Patch('id/:id')
-// async update(@Param('id') id: string, @Body() updateCustomerDto: EditCustomerDto) {
-//   return await this.customerService.update(id, updateCustomerDto);
-// }
+  // @Patch('id/:id')
+  // async update(@Param('id') id: string, @Body() updateCustomerDto: EditCustomerDto) {
+  //   return await this.customerService.update(id, updateCustomerDto);
+  // }
 
-@Delete('id/:id')
-async remove(@Param('id') id: string) {
-  return await this.customerService.remove(id);
-}
+  @Delete('id/:id')
+  async remove(@Param('id') id: string) {
+    return await this.customerService.remove(id);
+  }
 }
