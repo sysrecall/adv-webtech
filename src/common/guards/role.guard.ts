@@ -28,11 +28,14 @@ export class RolesGuard implements CanActivate {
 
     if (!token) { throw new UnauthorizedException('No token provided!'); }
     try {
-      const payload = await this.jwtService.verifyAsync(token);
-      // console.log(payload);
+      const payload = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
+  console.log('RolesGuard payload:', payload); // Add this for debugging
+      console.log('Required roles:', requiredRoles); // Add this for debugging
       return requiredRoles.includes(payload.role);
 
-    } catch {
+    } catch(error) {
+            console.error('RolesGuard error:', error); // Add this for debugging
+
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -41,4 +44,5 @@ export class RolesGuard implements CanActivate {
     const [type, token] = request.cookies?.Authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
+  
 }
