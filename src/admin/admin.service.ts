@@ -192,14 +192,24 @@ async createCustomer(adminId: number, customerData: Partial<Customer>) {
 
       // Try sending notification, but don't block customer creation
       try {
-        console.log(" Sending Pusher event for customer:", savedCustomer.fullName);
+        // console.log(" Sending Pusher event for customer:", savedCustomer.fullName);
           await this.notificationsService.sendNotification(
             'admin-channel',
             'customer-created',
-            { message: `Customer ${savedCustomer.fullName} created`, adminId }
+            {
+              message: `Customer ${savedCustomer.fullName} created`,
+              customer: {
+                id: savedCustomer.id,
+                fullName: savedCustomer.fullName,
+                email: savedCustomer.email,
+                phone: savedCustomer.phone,
+              },
+              adminId
+            }
           );
-          console.log("Pusher payload:", { message: `Customer ${savedCustomer.fullName} created`, adminId });
-          console.log(" Event sent to Pusher");
+
+          // console.log("Pusher payload:", { message: `Customer ${savedCustomer.fullName} created`, adminId });
+          // console.log(" Event sent to Pusher");
 
       } catch (notifyErr) {
         console.error("Pusher notification failed:", notifyErr.message);
