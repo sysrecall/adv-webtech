@@ -9,38 +9,37 @@ import { ArtistService } from 'src/artist/artist.service';
 export class AuthService {
     // adminService: any;
     constructor(
-        private readonly jwtService: JwtService, 
+        private readonly jwtService: JwtService,
         private readonly customerService: CustomerService,
         private readonly adminService: AdminService,
         private readonly artistService: ArtistService,
-    ) {}
-    
+    ) { }
+
     async signIn(username: string, pass: string, role: 'customer' | 'admin' | 'artist'): Promise<{ access_token: string }> {
         let user;
         switch (role) {
             case 'admin':
                 user = await this.adminService.findOneByUsername(username);
                 break;
-             case 'artist':
-                 user = await this.artistService.findOneByUsername(username);
-                 break;
+            case 'artist':
+                user = await this.artistService.findOneByUsername(username);
+                break;
             default:
                 user = await this.customerService.findOneByUsername(username);
                 break;
         }
+
 
         if (!user) throw new UnauthorizedException();
 
         const { passwordHash } = user;
         const result = await compare(pass, passwordHash);
 
-        if (!user.id || isNaN(user.id)) {
+        if (!user.id) {
             throw new UnauthorizedException("Invalid user ID");
-            }
+        }
 
         if (!result) throw new UnauthorizedException();
-
-
 
         const payload = { id: user.id, username: user.username, role: role };
         const token = await this.jwtService.signAsync(payload, {
