@@ -99,12 +99,19 @@ export class CustomerController {
       sameSite: 'None',
       maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
     });
+    res.cookie('isLoggedIn', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'None',
+      maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
+    });
     res.status(HttpStatus.OK).send();
   }
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res) {
     res.cookie('Authorization', '');
+    res.cookie('isLoggedIn', 'false');
     return { status: HttpStatus.OK, message: 'Logged out successfully' };
     // res.cookies.Authorization = null;
     // return res.send();
@@ -144,8 +151,12 @@ export class CustomerController {
     if (!token) { throw new UnauthorizedException('No token provided!'); }
 
     try {
-      const user = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
-      return await this.customerService.findOne(user.id);
+      const data = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
+      const user: {passwordHash: string} | null = await this.customerService.findOne(data.id);
+      if (user) {
+        const {passwordHash, ...cleanded} = user;
+        return cleanded;
+      }
     } catch (e) {
       throw e;
     }

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Art } from './entities/art.entity';
 import { CreateArtDto } from './dto/create-art.dto';
 import { UpdateArtDto } from './dto/update-art.dto';
@@ -53,6 +53,15 @@ export class ArtService {
       },
       relations: ['artist']
     });
+  }
+
+  async search(query: string) {
+    return this.artRepository.find(
+      { 
+        where: [{ artist: { username:  ILike(`%${query}%`) }}, {title:  ILike(`%${query}%`)}], 
+        relations: ['artist'] 
+      }
+    );
   }
 
   async findAll() {

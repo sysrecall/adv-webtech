@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Art } from 'src/modules/art/entities/art.entity';
+import User from 'src/common/interfaces/user';
 
 @Entity('artist')
 export class Artist implements User {

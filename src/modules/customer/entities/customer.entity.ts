@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTabl
 import { Admin } from "src/admin/entities/admin.entity";
 import { Order } from "src/modules/order/entities/order.entity";
 import { Cart } from "src/modules/cart/entities/cart.entity";
+import User from "src/common/interfaces/user";
 
 @Entity("customer")
 export class Customer implements User {

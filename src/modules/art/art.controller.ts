@@ -30,6 +30,11 @@ export class ArtController {
     return await this.artService.findOne(id);
   }
 
+  @Get('search/:query')
+  async search(@Param('query') query: string) {
+    return await this.artService.search(query);
+  }
+
   @Get()
   async findAll() {
     return await this.artService.findAll();
