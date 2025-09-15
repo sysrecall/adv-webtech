@@ -9,9 +9,10 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { Cart } from '../cart/entities/cart.entity';
 import { Order } from '../order/entities/order.entity';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [forwardRef(() => AuthModule), TypeOrmModule.forFeature([Customer, Order, Cart]), JwtModule],
+  imports: [forwardRef(() => AuthModule), NotificationModule, TypeOrmModule.forFeature([Customer, Order, Cart]), JwtModule],
   controllers: [CustomerController],
   providers: [CustomerService,
     {

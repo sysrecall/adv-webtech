@@ -10,38 +10,21 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Request } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChangePasswordCustomer } from './dto/change-password-customer.dto';
+import { NotificationService } from '../notification/notification.service';
 
 @Controller('customer')
 export class CustomerController {
   constructor(
     private readonly customerService: CustomerService,
     private readonly authService: AuthService,
+    private readonly notificationService: NotificationService,
     private jwtService: JwtService
   ) { }
 
   @Post()
-  @UseInterceptors(FileInterceptor('photo', {
-    fileFilter: (req, file, cb) => {
-      if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/)) {
-        cb(null, true);
-      } else {
-        cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
-      }
-    },
-    limits: {
-      fileSize: 2 * 1024 * 1024,
-    },
-    storage: diskStorage({
-      destination: './uploads/customer/profile-photos',
-      filename: function (req, file, cb) {
-        cb(null, Date.now() + file.originalname)
-      }
-    })
-  }))
   @UsePipes(new ValidationPipe())
-  async create(@Body() createCustomerDto: CreateCustomerDto, @UploadedFile() photo: Express.Multer.File, @Res() res) {
-    const profilePhotoPath = photo ? photo.filename : null;
-    await this.customerService.create(createCustomerDto, profilePhotoPath);
+  async create(@Body() createCustomerDto: CreateCustomerDto, @Res() res) {
+    await this.customerService.create(createCustomerDto, null);
     return res.status(HttpStatus.CREATED).send();
   }
 
@@ -105,6 +88,13 @@ export class CustomerController {
       sameSite: 'None',
       maxAge: parseInt(process.env.JWT_COOKIE_EXPIRATION ?? "3600000")
     });
+
+    this.notificationService.sendNotification({
+      interest: loginCustomerDto.username,
+      title: 'Welcome',
+      body: 'Dicover new arts everyday',
+      url: 'http://localhost:8000/arts'
+    });
     res.status(HttpStatus.OK).send();
   }
 
@@ -126,8 +116,8 @@ export class CustomerController {
       const user = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
       console.log(user);
       await this.customerService.changePassword(
-        user.id, 
-        changePasswordCustomer.password, 
+        user.id,
+        changePasswordCustomer.password,
         changePasswordCustomer.newPassword
       );
     } catch (e) {
@@ -152,9 +142,9 @@ export class CustomerController {
 
     try {
       const data = await this.jwtService.verifyAsync(token, { secret: process.env.JWT_SECRET });
-      const user: {passwordHash: string} | null = await this.customerService.findOne(data.id);
+      const user: { passwordHash: string } | null = await this.customerService.findOne(data.id);
       if (user) {
-        const {passwordHash, ...cleanded} = user;
+        const { passwordHash, ...cleanded } = user;
         return cleanded;
       }
     } catch (e) {
