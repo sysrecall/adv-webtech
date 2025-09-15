@@ -8,7 +8,7 @@ import { Customer } from 'src/modules/customer/entities/customer.entity';
 import * as bcrypt from 'bcrypt';
 import { Art } from 'src/modules/art/entities/art.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
-import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationService } from 'src/modules/notification/notification.service';
 @Injectable()
 export class AdminService {
   artRepo: any;
@@ -23,7 +23,7 @@ export class AdminService {
      private readonly artRepository: Repository<Art>,
     @InjectRepository(Order)
      private readonly orderRepository: Repository<Order>,
-    private readonly notificationsService: NotificationsService,
+    private readonly notificationService: NotificationService,
   ) {}
 
 
@@ -193,20 +193,20 @@ async createCustomer(adminId: number, customerData: Partial<Customer>) {
       // Try sending notification, but don't block customer creation
       try {
         // console.log(" Sending Pusher event for customer:", savedCustomer.fullName);
-          await this.notificationsService.sendNotification(
-            'admin-channel',
-            'customer-created',
-            {
-              message: `Customer ${savedCustomer.fullName} created`,
-              customer: {
-                id: savedCustomer.id,
-                fullName: savedCustomer.fullName,
-                email: savedCustomer.email,
-                phone: savedCustomer.phone,
-              },
-              adminId
-            }
-          );
+          // await this.notificationsService.sendNotification(
+          //   'admin-channel',
+          //   'customer-created',
+          //   {
+          //     message: `Customer ${savedCustomer.fullName} created`,
+          //     customer: {
+          //       id: savedCustomer.id,
+          //       fullName: savedCustomer.fullName,
+          //       email: savedCustomer.email,
+          //       phone: savedCustomer.phone,
+          //     },
+          //     adminId
+          //   }
+          // );
 
           // console.log("Pusher payload:", { message: `Customer ${savedCustomer.fullName} created`, adminId });
           // console.log(" Event sent to Pusher");

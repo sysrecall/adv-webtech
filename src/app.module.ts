@@ -15,6 +15,7 @@ import { CartItemModule } from './modules/cart-item/cart-item.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { join } from 'path';
       rootPath: join(__dirname, '../'),
       renderPath: 'uploads'
     }),
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

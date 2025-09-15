@@ -55,6 +55,15 @@ export class ArtService {
     });
   }
 
+  async style(style: string) {
+    return this.artRepository.find({
+      where: {
+        style: style
+      },
+      relations: ['artist']
+    });
+  }
+
   async search(query: string) {
     return this.artRepository.find(
       { 
