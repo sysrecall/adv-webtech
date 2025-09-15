@@ -11,12 +11,12 @@ import { Order } from 'src/modules/order/entities/order.entity';
 import { ArtModule } from 'src/modules/art/art.module';
 // import { MailerModule } from '@nestjs-modules/mailer';
 import { OrderModule } from 'src/modules/order/order.module';
-import { NotificationService } from 'src/modules/notification/notification.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Module({
   imports:  [forwardRef(() => AuthModule), TypeOrmModule.forFeature([Admin,Customer ,Art, Order]), forwardRef(() => ArtModule),forwardRef(() => OrderModule),JwtModule], 
   controllers: [AdminController],
-  providers: [AdminService,NotificationService],
-  exports: [AdminService,NotificationService]
+  providers: [AdminService,NotificationsService],
+  exports: [AdminService,NotificationsService]
 })
 export class AdminModule {}
